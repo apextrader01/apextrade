@@ -24,34 +24,28 @@ const GOOGLE_CLIENT_ID = "338294665324-uo4kj0ffgsk0eucvlbihj6nvkfmdipo9.apps.goo
 function handleGoogleAuthResponse(response) {
     const responsePayload = decodeJwtToken(response.credential);
 
-    // Break down the incoming Google full name string as base parameters
     const nameParts = responsePayload.name.trim().split(/\s+/);
     const defaultFirstName = nameParts[0] || "";
     const defaultLastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
     const defaultMiddleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
 
-    // Pre-fill name fields inside the visible popup form interface
     if(document.getElementById('setup-fname')) document.getElementById('setup-fname').value = defaultFirstName;
     if(document.getElementById('setup-mname')) document.getElementById('setup-mname').value = defaultMiddleName;
     if(document.getElementById('setup-lname')) document.getElementById('setup-lname').value = defaultLastName;
 
-    // Render the interactive modal container on screen
     const modal = document.getElementById('profile-setup-modal');
     if (modal) {
         modal.style.display = 'flex';
         
-        // Form submission behavior tracking
         document.getElementById('profile-setup-form').onsubmit = function(e) {
             e.preventDefault();
             
-            // Build reconstructed full name based on clean manual user edits
             const prefix = document.getElementById('setup-title').value;
             const fName = document.getElementById('setup-fname').value.trim();
             const mName = document.getElementById('setup-mname').value.trim();
             const lName = document.getElementById('setup-lname').value.trim();
             const combinedFullName = `${prefix} ${fName} ${mName ? mName + ' ' : ''}${lName}`;
             
-            // Map completely customizable fields into the core customer profile package
             const customerUser = {
                 username: responsePayload.email,
                 fullName: combinedFullName,
@@ -67,7 +61,6 @@ function handleGoogleAuthResponse(response) {
                 salutation: prefix
             };
             
-            // Commit comprehensive account structures into persistent session engines
             localStorage.setItem('user_credentials', JSON.stringify(customerUser));
             localStorage.setItem('current_user', JSON.stringify(customerUser));
             localStorage.setItem('isLoggedIn', 'true');
@@ -78,7 +71,6 @@ function handleGoogleAuthResponse(response) {
             window.location.reload();
         };
     } else {
-        // Safe operational fallback state if structural rendering is blocked
         const fallbackProfile = {
             username: responsePayload.email,
             fullName: "Mr. " + responsePayload.name,
@@ -110,24 +102,11 @@ function decodeJwtToken(token) {
     return JSON.parse(jsonPayload);
 }
 
-// 🛠️ Helper function to auto-generate a sleek Client ID for new users
+// 🛠️ Helper function to auto-generate a sleek Client ID
 function generateAutomatedClientId(name) {
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
     const randomNum = Math.floor(100 + Math.random() * 900);
     return `${initials}${randomNum}V`;
-}
-
-// Seed default user credentials if none exist, so the user can log in immediately
-if (!localStorage.getItem('user_credentials')) {
-    localStorage.setItem('user_credentials', JSON.stringify({
-        username: "trader101",
-        password: "password123",
-        fullName: "Hari Krishnan I V",
-        dob: "2002-05-15",
-        clientId: "HA02V",
-        classification: "Trader",
-        traderType: "ACTIVE"
-    }));
 }
 
 // Helper: generate unique client ID using formula
@@ -151,7 +130,23 @@ function generateClientId(fullName, dob) {
     return `${firstTwo}${lastTwoYear}${lastLetter}`;
 }
 
-// Instruments Database
+// Seed default user credentials
+if (!localStorage.getItem('user_credentials')) {
+    localStorage.setItem('user_credentials', JSON.stringify({
+        username: "trader101",
+        password: "password123",
+        fullName: "Hari Krishnan I V",
+        dob: "2002-05-15",
+        clientId: "HA02V",
+        classification: "Trader",
+        traderType: "ACTIVE"
+    }));
+}
+
+// ==========================================================================
+// 📊 DATABASE & STATE MANAGEMENT
+// ==========================================================================
+
 const INSTRUMENTS_DB = [
     { symbol: "TATASTEEL", name: "Tata Steel Ltd.", price: 205.20, change: -1.62 },
     { symbol: "ADANIPOWER", name: "Adani Power India Ltd.", price: 219.32, change: 0.77 },
@@ -162,9 +157,7 @@ const INSTRUMENTS_DB = [
     { symbol: "APOLLOMICR", name: "Apollo Micro Systems Ltd.", price: 355.05, change: -0.85 }
 ];
 
-INSTRUMENTS_DB.forEach(item => {
-    item.prevClose = item.price / (1 + item.change / 100);
-});
+INSTRUMENTS_DB.forEach(item => { item.prevClose = item.price / (1 + item.change / 100); });
 
 let activeTab = "watchlist-tab";
 let watchlistSymbols = ["TATASTEEL", "ADANIPOWER", "WIPRO", "GAIL", "KITEX"];
@@ -176,7 +169,6 @@ let portfolioHoldings = [
 ];
 
 let cashBalance = 72.36; 
-
 let transactionLogs = [
     { type: "BUY", symbol: "TATASTEEL", qty: 200, price: 198.50, date: "2026-05-20" },
     { type: "BUY", symbol: "WIPRO", qty: 250, price: 190.20, date: "2026-05-21" },
@@ -184,11 +176,8 @@ let transactionLogs = [
 ];
 
 let previousPricesMap = {};
-INSTRUMENTS_DB.forEach(item => {
-    previousPricesMap[item.symbol] = item.price;
-});
+INSTRUMENTS_DB.forEach(item => { previousPricesMap[item.symbol] = item.price; });
 
-let lastTotalPortfolioValue = 145230.50;
 let activeSearchQuery = "";
 let selectedAsset = null;
 let currentTransactionType = "BUY";
@@ -203,7 +192,6 @@ const holdingsList = document.getElementById("holdings-list");
 const activityLogList = document.getElementById("activity-log-list");
 const portfolioBalanceEl = document.getElementById("portfolio-balance");
 const portfolioChangeBadge = document.getElementById("portfolio-change-badge");
-const balanceCard = document.getElementById("balance-card");
 const statusTimeEl = document.getElementById("status-time");
 const portfolioInvestedEl = document.getElementById("portfolio-invested");
 const portfolioPnlEl = document.getElementById("portfolio-pnl");
@@ -218,8 +206,6 @@ const modalCloseBtn = document.getElementById("modal-close-btn");
 const toggleBuyBtn = document.getElementById("toggle-buy-btn");
 const toggleSellBtn = document.getElementById("toggle-sell-btn");
 const transactionQtyInput = document.getElementById("transaction-qty");
-const qtyMinusBtn = document.getElementById("qty-minus");
-const qtyPlusBtn = document.getElementById("qty-plus");
 const modalOrderValue = document.getElementById("modal-order-value");
 const modalTradingFee = document.getElementById("modal-trading-fee");
 const executeOrderBtn = document.getElementById("execute-order-btn");
@@ -238,14 +224,14 @@ const authErrorMsg = document.getElementById("auth-error-msg");
 const authSubmitBtn = document.getElementById("auth-submit-btn");
 const authTitle = document.getElementById("auth-title");
 const authSubtitle = document.getElementById("auth-subtitle");
-const authToggleText = document.getElementById("auth-toggle-text");
 const authToggleLink = document.getElementById("auth-toggle-link");
 const logoutBtn = document.getElementById("logout-btn");
 
-function flattenString(str) {
-    if (!str) return "";
-    return str.replace(/\s+/g, '').toUpperCase();
-}
+// ==========================================================================
+// 🛠️ CORE FUNCTIONS & UI RENDERERS
+// ==========================================================================
+
+function flattenString(str) { return str ? str.replace(/\s+/g, '').toUpperCase() : ""; }
 
 function handleSearch(event) {
     const rawValue = event.target.value;
@@ -266,7 +252,6 @@ function handleSearch(event) {
     const filteredResults = INSTRUMENTS_DB.filter(item => {
         return flattenString(item.symbol).includes(query) || flattenString(item.name).includes(query);
     });
-
     renderSearchResults(filteredResults);
 }
 
@@ -325,11 +310,8 @@ function renderSearchResults(results) {
 
 function toggleWatchlist(symbol) {
     const index = watchlistSymbols.indexOf(symbol);
-    if (index > -1) {
-        watchlistSymbols.splice(index, 1);
-    } else {
-        watchlistSymbols.push(symbol);
-    }
+    if (index > -1) { watchlistSymbols.splice(index, 1); } 
+    else { watchlistSymbols.push(symbol); }
     renderWatchlist();
 }
 
@@ -387,6 +369,9 @@ function renderWatchlist() {
 
 function renderPortfolio() {
     if(!holdingsList) return;
+    let totalInvested = 0;
+    let totalCurrentValue = 0;
+
     if (portfolioHoldings.length === 0) {
         holdingsList.innerHTML = `<div class="empty-holdings">No active stock holdings.</div>`;
     } else {
@@ -397,6 +382,9 @@ function renderPortfolio() {
 
             const currentVal = holding.qty * asset.price;
             const investedVal = holding.qty * holding.avgBuyPrice;
+            totalInvested += investedVal;
+            totalCurrentValue += currentVal;
+
             const pnl = currentVal - investedVal;
             const pnlPercent = (pnl / investedVal) * 100;
             const pnlClass = pnl >= 0 ? "pnl-positive" : "pnl-negative";
@@ -424,126 +412,30 @@ function renderPortfolio() {
         });
     }
 
-    if(!activityLogList) return;
-    activityLogList.innerHTML = "";
-    if (transactionLogs.length === 0) {
-        activityLogList.innerHTML = `<div class="dropdown-empty">No transaction history</div>`;
-    } else {
-        transactionLogs.slice(-5).reverse().forEach(log => {
-            const isBuy = log.type === "BUY";
-            const total = log.qty * log.price;
-            
-            const logRow = document.createElement("div");
-            logRow.className = "log-item";
-            logRow.innerHTML = `
-                <div class="log-left">
-                    <span class="log-badge ${isBuy ? 'buy' : 'sell'}">${log.type}</span>
-                    <span class="log-ticker">${log.symbol}</span>
-                </div>
-                <div class="log-middle">${log.qty} shares @ ₹${log.price.toFixed(2)}</div>
-                <div class="log-right">₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-            `;
-            activityLogList.appendChild(logRow);
-        });
-    }
-    // ==========================================================================
-// 📊 FIXED PROFILE SWITCHER & LAYOUT PANEL SWITCH ENGINE
-// ==========================================================================
-
-function renderProfileDetails() {
-    const nameDisplay = document.getElementById("profile-client-name");
-    const dobDisplay = document.getElementById("profile-dob-display");
-    const emailDisplay = document.getElementById("profile-email-display");
-    const clientIdDisplay = document.getElementById("profile-client-id");
-    const verificationStatus = document.getElementById("profile-verification-status");
-    const genderDisplay = document.getElementById("profile-gender-display");
-    const experienceDisplay = document.getElementById("profile-experience-display");
-    const segmentsDisplay = document.getElementById("profile-segments-display");
-    
-    const targetSession = localStorage.getItem('current_user') || localStorage.getItem('user_credentials');
-    let creds = {};
-    if (targetSession) {
-        creds = JSON.parse(targetSession);
-    }
-    
-    if (nameDisplay) nameDisplay.textContent = creds.fullName || "Hari Krishnan I V";
-    if (dobDisplay) dobDisplay.textContent = creds.dob || "2002-03-19";
-    if (emailDisplay) emailDisplay.textContent = creds.email || creds.username || "appwebsitetester@gmail.com";
-    if (clientIdDisplay) clientIdDisplay.textContent = creds.clientId || "HA02V";
-    if (genderDisplay) genderDisplay.textContent = creds.gender || "Male";
-    if (experienceDisplay) experienceDisplay.textContent = creds.experience || "1-3 Years";
-    if (segmentsDisplay) segmentsDisplay.textContent = Array.isArray(creds.segments) ? creds.segments.join(", ") : "Cash, Derivatives";
-    
-    if (verificationStatus) {
-        verificationStatus.textContent = "✓ VERIFIED ACCOUNT";
-        verificationStatus.className = "verification-badge verified";
-    }
-}
-
-function showProfilePanel(show) {
-    const profilePanel = document.getElementById("profile-panel");
-    const dashboardMainView = document.getElementById("dashboard-main-view");
-    
-    if (show) {
-        if (dashboardMainView) {
-            dashboardMainView.classList.add("hidden");
-            dashboardMainView.style.setProperty('display', 'none', 'important');
+    if(activityLogList) {
+        activityLogList.innerHTML = "";
+        if (transactionLogs.length === 0) {
+            activityLogList.innerHTML = `<div class="dropdown-empty">No transaction history</div>`;
+        } else {
+            transactionLogs.slice(-5).reverse().forEach(log => {
+                const isBuy = log.type === "BUY";
+                const total = log.qty * log.price;
+                const logRow = document.createElement("div");
+                logRow.className = "log-item";
+                logRow.innerHTML = `
+                    <div class="log-left">
+                        <span class="log-badge ${isBuy ? 'buy' : 'sell'}">${log.type}</span>
+                        <span class="log-ticker">${log.symbol}</span>
+                    </div>
+                    <div class="log-middle">${log.qty} shares @ ₹${log.price.toFixed(2)}</div>
+                    <div class="log-right">₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                `;
+                activityLogList.appendChild(logRow);
+            });
         }
-        if (profilePanel) {
-            profilePanel.classList.remove("hidden");
-            profilePanel.classList.add("active");
-            profilePanel.style.setProperty('display', 'block', 'important');
-        }
-        renderProfileDetails();
-    } else {
-        if (profilePanel) {
-            profilePanel.classList.add("hidden");
-            profilePanel.classList.remove("active");
-            profilePanel.style.setProperty('display', 'none', 'important');
-        }
-        if (dashboardMainView) {
-            dashboardMainView.classList.remove("hidden");
-            dashboardMainView.style.setProperty('display', 'grid', 'important');
-        }
-        
-        document.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("active"));
-        const defaultWatchTab = document.querySelector('button[data-tab="watchlist-tab"]');
-        if(defaultWatchTab) defaultWatchTab.classList.add("active");
     }
-}
 
-function forceBindProfileNavigation() {
-    const profileBtn = document.querySelector(".profile-btn");
-    const profileTabBtn = document.querySelector('button[data-tab="profile-panel"]');
-    const backBtn = document.getElementById("profile-back-btn");
-    const backSecondaryBtn = document.getElementById("back-to-dashboard-btn");
-
-    if (profileBtn) profileBtn.onclick = () => showProfilePanel(true);
-    if (profileTabBtn) profileTabBtn.onclick = () => showProfilePanel(true);
-    if (backBtn) backBtn.onclick = () => showProfilePanel(false);
-    if (backSecondaryBtn) backSecondaryBtn.onclick = () => showProfilePanel(false);
-}
-
-// Intercept window boots to set dynamic trackers
-document.addEventListener("DOMContentLoaded", function() {
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-        renderProfileDetails();
-        forceBindProfileNavigation();
-    }
-});
-
-setTimeout(forceBindProfileNavigation, 1000);
-
-    let totalInvested = 0;
-    let totalCurrentValue = 0;
-    portfolioHoldings.forEach(holding => {
-        const asset = INSTRUMENTS_DB.find(i => i.symbol === holding.symbol);
-        if (asset) {
-            totalInvested += holding.qty * holding.avgBuyPrice;
-            totalCurrentValue += holding.qty * asset.price;
-        }
-    });
-
+    // Update Overall Stats
     const netPnl = totalCurrentValue - totalInvested;
     const netPnlPercent = totalInvested > 0 ? (netPnl / totalInvested) * 100 : 0;
     const netPnlClass = netPnl >= 0 ? "pnl-positive" : "pnl-negative";
@@ -556,31 +448,22 @@ setTimeout(forceBindProfileNavigation, 1000);
     }
 }
 
-function updateUI() {
-    renderWatchlist();
-    renderPortfolio();
-    updatePortfolioBalance();
-}
-
 function updatePortfolioBalance() {
     let holdingsValue = 0;
-    portfolioHoldings.forEach(holding => {
-        const asset = INSTRUMENTS_DB.find(i => i.symbol === holding.symbol);
-        if (asset) holdingsValue += holding.qty * asset.price;
-    });
-
-    const totalPortfolioValue = holdingsValue + cashBalance;
-    if(portfolioBalanceEl) portfolioBalanceEl.textContent = totalPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
     let dailyInvested = 0;
     let dailyChangeVal = 0;
+
     portfolioHoldings.forEach(holding => {
         const asset = INSTRUMENTS_DB.find(i => i.symbol === holding.symbol);
         if (asset) {
+            holdingsValue += holding.qty * asset.price;
             dailyChangeVal += (holding.qty * asset.price - holding.qty * asset.prevClose);
             dailyInvested += holding.qty * asset.prevClose;
         }
     });
+
+    const totalPortfolioValue = holdingsValue + cashBalance;
+    if(portfolioBalanceEl) portfolioBalanceEl.textContent = totalPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
     const dailyPercent = dailyInvested > 0 ? (dailyChangeVal / dailyInvested) * 100 : 0;
     const isPos = dailyChangeVal >= 0;
@@ -590,7 +473,11 @@ function updatePortfolioBalance() {
     }
 }
 
-function startLiveTicker() {}
+function updateUI() {
+    renderWatchlist();
+    renderPortfolio();
+    updatePortfolioBalance();
+}
 
 function openOrderModal(asset) {
     selectedAsset = asset;
@@ -663,13 +550,15 @@ function executeTransaction() {
     closeOrderModal();
 }
 
-// 🌐 MASTER INTEGRATED ROUTER ENGINE
 function showProfilePanel(show) {
     const profilePanel = document.getElementById("profile-panel");
     const dashboardMainView = document.getElementById("dashboard-main-view");
     
     if (show) {
-        if (dashboardMainView) dashboardMainView.classList.add("hidden");
+        if (dashboardMainView) {
+            dashboardMainView.classList.add("hidden");
+            dashboardMainView.style.setProperty('display', 'none', 'important');
+        }
         if (profilePanel) {
             profilePanel.classList.remove("hidden");
             profilePanel.classList.add("active");
@@ -687,10 +576,25 @@ function showProfilePanel(show) {
             dashboardMainView.style.setProperty('display', 'block', 'important');
         }
         
-        // Match standard structural layouts inside mobile devices
         document.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("active"));
         const defaultWatchTab = document.querySelector('button[data-tab="watchlist-tab"]');
         if(defaultWatchTab) defaultWatchTab.classList.add("active");
+    }
+}
+
+function renderProfileDetails() {
+    const creds = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials'));
+    if (!creds) return;
+
+    if (document.getElementById("profile-client-name")) document.getElementById("profile-client-name").textContent = creds.fullName || "Hari Krishnan I V";
+    if (document.getElementById("profile-dob-display")) document.getElementById("profile-dob-display").textContent = creds.dob || "2002-03-19";
+    if (document.getElementById("profile-email-display")) document.getElementById("profile-email-display").textContent = creds.username || creds.email || "appwebsitetester@gmail.com";
+    if (document.getElementById("profile-client-id")) document.getElementById("profile-client-id").textContent = creds.clientId || "HA02V";
+    if (document.getElementById("profile-gender-display")) document.getElementById("profile-gender-display").textContent = creds.gender || "Male";
+    if (document.getElementById("profile-verification-status")) {
+        const vBadge = document.getElementById("profile-verification-status");
+        vBadge.textContent = "✓ VERIFIED ACCOUNT";
+        vBadge.className = "verification-badge verified";
     }
 }
 
@@ -713,22 +617,6 @@ function setupTabs() {
     });
 }
 
-function renderProfileDetails() {
-    const creds = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials'));
-    if (!creds) return;
-
-    if (document.getElementById("profile-client-name")) document.getElementById("profile-client-name").textContent = creds.fullName || "Hari Krishnan I V";
-    if (document.getElementById("profile-dob-display")) document.getElementById("profile-dob-display").textContent = creds.dob || "2002-03-19";
-    if (document.getElementById("profile-email-display")) document.getElementById("profile-email-display").textContent = creds.username || creds.email || "appwebsitetester@gmail.com";
-    if (document.getElementById("profile-client-id")) document.getElementById("profile-client-id").textContent = creds.clientId || "HA02V";
-    if (document.getElementById("profile-gender-display")) document.getElementById("profile-gender-display").textContent = creds.gender || "Male";
-    if (document.getElementById("profile-verification-status")) {
-        const vBadge = document.getElementById("profile-verification-status");
-        vBadge.textContent = "✓ VERIFIED ACCOUNT";
-        vBadge.className = "verification-badge verified";
-    }
-}
-
 function startClock() {
     function updateClock() {
         const now = new Date();
@@ -738,6 +626,27 @@ function startClock() {
     }
     updateClock();
     setInterval(updateClock, 60000);
+}
+
+// ==========================================================================
+// 🔐 AUTHENTICATION & INITIALIZATION LOGIC
+// ==========================================================================
+
+function switchFormState() {
+    if (authMode === "LOGIN") {
+        authTitle.textContent = "Log In to ApexTrade";
+        authSubmitBtn.textContent = "LOG IN";
+        document.querySelectorAll(".signup-only").forEach(el => el.classList.add("hidden"));
+    } else {
+        authTitle.textContent = "Create your Account";
+        authSubmitBtn.textContent = "SIGN UP";
+        document.querySelectorAll(".signup-only").forEach(el => el.classList.remove("hidden"));
+    }
+}
+
+function showAuthError(message) {
+    authErrorMsg.textContent = message;
+    authErrorMsg.classList.remove("hidden");
 }
 
 function handleAuthSubmit(event) {
@@ -761,7 +670,7 @@ function handleAuthSubmit(event) {
         const storedCreds = JSON.parse(localStorage.getItem('user_credentials'));
         if (storedCreds && storedCreds.username === username && storedCreds.password === password) {
             localStorage.setItem('isLoggedIn', 'true');
-            initializeApp();
+            window.location.reload(); // Force reload to clear route guards safely
         } else {
             showAuthError("Invalid username or password.");
         }
@@ -775,33 +684,9 @@ function handleVerifyOtp() {
         const creds = JSON.parse(localStorage.getItem('user_credentials'));
         creds.clientId = generateClientId(creds.fullName, creds.dob);
         localStorage.setItem('user_credentials', JSON.stringify(creds));
-        
-        document.getElementById("otp-container").classList.add("hidden");
-        authForm.classList.remove("hidden");
-        authTitle.classList.remove("hidden");
-        authSubtitle.classList.remove("hidden");
-        authMode = "LOGIN";
-        switchFormState();
-        initializeApp();
+        window.location.reload(); 
     } else {
         document.getElementById("otp-error-msg").classList.remove("hidden");
-    }
-}
-
-function showAuthError(message) {
-    authErrorMsg.textContent = message;
-    authErrorMsg.classList.remove("hidden");
-}
-
-function switchFormState() {
-    if (authMode === "LOGIN") {
-        authTitle.textContent = "Log In to ApexTrade";
-        authSubmitBtn.textContent = "LOG IN";
-        document.querySelectorAll(".signup-only").forEach(el => el.classList.add("hidden"));
-    } else {
-        authTitle.textContent = "Create your Account";
-        authSubmitBtn.textContent = "SIGN UP";
-        document.querySelectorAll(".signup-only").forEach(el => el.classList.remove("hidden"));
     }
 }
 
@@ -832,23 +717,31 @@ function initializeApp() {
         return;
     }
 
+    // --- LOGGED IN SECURE STATE ---
+    // Critical Fix: Remove the security style block so the dashboard can be seen!
+    const tempHideStyle = document.getElementById('temp-auth-hide');
+    if(tempHideStyle) tempHideStyle.remove();
+
     if(desktopWrapper) desktopWrapper.classList.remove("hidden");
     if(authContainer) authContainer.classList.add("hidden");
     
-    // Explicitly bind the  headers & profile screen navigation buttons
-    const headerProfileBtn = document.querySelector(".profile-btn");
-    if (headerProfileBtn) {
-        headerProfileBtn.onclick = function() {
-            showProfilePanel(true);
-        };
+    // Check if the user previously uploaded a photo and display it immediately
+    const savedAvatar = localStorage.getItem("user_avatar");
+    if (savedAvatar) {
+        const avatarContainer = document.getElementById("profile-avatar-img-container");
+        if (avatarContainer) {
+            avatarContainer.innerHTML = `<img src="${savedAvatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
+        }
     }
 
+    // Explicitly bind the headers & profile screen navigation buttons
+    const headerProfileBtn = document.querySelector(".profile-btn");
+    if (headerProfileBtn) headerProfileBtn.onclick = () => showProfilePanel(true);
     const profileBackBtn = document.getElementById("profile-back-btn");
-    if (profileBackBtn) {
-        profileBackBtn.onclick = function() {
-            showProfilePanel(false);
-        };
-    }
+    if (profileBackBtn) profileBackBtn.onclick = () => showProfilePanel(false);
+    const backToDashboardBtn = document.getElementById("back-to-dashboard-btn");
+    if (backToDashboardBtn) backToDashboardBtn.onclick = () => showProfilePanel(false);
+    
     // 📸 Handle customer photo uploads and stream to 15GB Google Server bucket
     const avatarUpload = document.getElementById("avatar-upload");
     if (avatarUpload) {
@@ -866,13 +759,6 @@ function initializeApp() {
 
     // Initialize the token client tracking hooks on terminal boot
     initializeGoogleTokenEngine();
-
-    const backToDashboardBtn = document.getElementById("back-to-dashboard-btn");
-    if (backToDashboardBtn) {
-        backToDashboardBtn.onclick = function() {
-            showProfilePanel(false);
-        };
-    }
     
     if(logoutBtn) logoutBtn.onclick = performLogout;
     
@@ -885,6 +771,7 @@ function initializeApp() {
     setupTabs();
     updateUI();
 }
+
 // ==========================================================================
 // ☁️ GOOGLE DRIVE 15GB FREE STORAGE MANAGEMENT SYSTEM
 // ==========================================================================
