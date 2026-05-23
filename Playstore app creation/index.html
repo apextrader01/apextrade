@@ -260,16 +260,16 @@
                                     <span class="card-num">Personal KYC Details</span>
                                 </div>
                                 <div class="profile-card-body">
-                                    <label for="avatar-upload" class="profile-avatar-container" style="cursor: pointer;" title="Click to Upload Profile Picture">
-                                        <div class="profile-avatar-new" id="profile-avatar-img-container">
-                                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
-                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                                <circle cx="12" cy="7" r="4"></circle>
-                                            </svg>
-                                        </div>
-                                        <div class="profile-status-ring"></div>
-                                        <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
-                                    </label>
+                                 <div class="profile-avatar-container" style="position: relative; display: inline-block; cursor: pointer; margin-bottom: 4px;" title="Click to Upload Profile Picture" onclick="document.getElementById('avatar-upload').click();">
+    <div class="profile-avatar-new" id="profile-avatar-img-container">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+    </div>
+    <div class="profile-status-ring"></div>
+</div>
+<input type="file" id="avatar-upload" accept="image/*" style="display: none;">
                                     
                                     <h3 class="profile-client-name read-field" id="profile-client-name">Mr. Loading...</h3>
                                     
