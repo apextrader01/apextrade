@@ -47,9 +47,11 @@ function handleGoogleAuthResponse(response) {
     };
     
     // Save customer session in local storage automatically
-    localStorage.setItem('user_credentials', JSON.stringify(customerUser));
-    localStorage.setItem('current_user', JSON.stringify(customerUser));
-    
+     localStorage.setItem('user_credentials', JSON.stringify(customerUser));
+     localStorage.setItem('current_user', JSON.stringify(customerUser));
+     localStorage.setItem('isLoggedIn', 'true');
+     localStorage.setItem('login_status', 'true');
+ 
     // Redirect smoothly into the dashboard terminal
     alert(`Welcome, ${customerUser.fullName}! Logging in...`);
     window.location.reload(); 
