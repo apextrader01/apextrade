@@ -1,6 +1,13 @@
 // app.js - Live Stock Portfolio & Market Simulation
 
 // Check if user session token exists in storage immediately to hide flicker
+// 🔐 Sync Google User Session with the Dashboard Gate Instantly
+if (localStorage.getItem('current_user') && localStorage.getItem('isLoggedIn') !== 'true') {
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('login_status', 'true');
+}
+
+// 🛡️ Existing Route Guard Security Check
 if (localStorage.getItem('isLoggedIn') !== 'true') {
     const style = document.createElement('style');
     style.innerHTML = '.desktop-wrapper { display: none !important; }';
