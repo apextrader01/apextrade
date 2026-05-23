@@ -443,6 +443,93 @@ function renderPortfolio() {
             activityLogList.appendChild(logRow);
         });
     }
+    // ==========================================================================
+// 📊 FIXED PROFILE SWITCHER & LAYOUT PANEL SWITCH ENGINE
+// ==========================================================================
+
+function renderProfileDetails() {
+    const nameDisplay = document.getElementById("profile-client-name");
+    const dobDisplay = document.getElementById("profile-dob-display");
+    const emailDisplay = document.getElementById("profile-email-display");
+    const clientIdDisplay = document.getElementById("profile-client-id");
+    const verificationStatus = document.getElementById("profile-verification-status");
+    const genderDisplay = document.getElementById("profile-gender-display");
+    const experienceDisplay = document.getElementById("profile-experience-display");
+    const segmentsDisplay = document.getElementById("profile-segments-display");
+    
+    const targetSession = localStorage.getItem('current_user') || localStorage.getItem('user_credentials');
+    let creds = {};
+    if (targetSession) {
+        creds = JSON.parse(targetSession);
+    }
+    
+    if (nameDisplay) nameDisplay.textContent = creds.fullName || "Hari Krishnan I V";
+    if (dobDisplay) dobDisplay.textContent = creds.dob || "2002-03-19";
+    if (emailDisplay) emailDisplay.textContent = creds.email || creds.username || "appwebsitetester@gmail.com";
+    if (clientIdDisplay) clientIdDisplay.textContent = creds.clientId || "HA02V";
+    if (genderDisplay) genderDisplay.textContent = creds.gender || "Male";
+    if (experienceDisplay) experienceDisplay.textContent = creds.experience || "1-3 Years";
+    if (segmentsDisplay) segmentsDisplay.textContent = Array.isArray(creds.segments) ? creds.segments.join(", ") : "Cash, Derivatives";
+    
+    if (verificationStatus) {
+        verificationStatus.textContent = "✓ VERIFIED ACCOUNT";
+        verificationStatus.className = "verification-badge verified";
+    }
+}
+
+function showProfilePanel(show) {
+    const profilePanel = document.getElementById("profile-panel");
+    const dashboardMainView = document.getElementById("dashboard-main-view");
+    
+    if (show) {
+        if (dashboardMainView) {
+            dashboardMainView.classList.add("hidden");
+            dashboardMainView.style.setProperty('display', 'none', 'important');
+        }
+        if (profilePanel) {
+            profilePanel.classList.remove("hidden");
+            profilePanel.classList.add("active");
+            profilePanel.style.setProperty('display', 'block', 'important');
+        }
+        renderProfileDetails();
+    } else {
+        if (profilePanel) {
+            profilePanel.classList.add("hidden");
+            profilePanel.classList.remove("active");
+            profilePanel.style.setProperty('display', 'none', 'important');
+        }
+        if (dashboardMainView) {
+            dashboardMainView.classList.remove("hidden");
+            dashboardMainView.style.setProperty('display', 'grid', 'important');
+        }
+        
+        document.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("active"));
+        const defaultWatchTab = document.querySelector('button[data-tab="watchlist-tab"]');
+        if(defaultWatchTab) defaultWatchTab.classList.add("active");
+    }
+}
+
+function forceBindProfileNavigation() {
+    const profileBtn = document.querySelector(".profile-btn");
+    const profileTabBtn = document.querySelector('button[data-tab="profile-panel"]');
+    const backBtn = document.getElementById("profile-back-btn");
+    const backSecondaryBtn = document.getElementById("back-to-dashboard-btn");
+
+    if (profileBtn) profileBtn.onclick = () => showProfilePanel(true);
+    if (profileTabBtn) profileTabBtn.onclick = () => showProfilePanel(true);
+    if (backBtn) backBtn.onclick = () => showProfilePanel(false);
+    if (backSecondaryBtn) backSecondaryBtn.onclick = () => showProfilePanel(false);
+}
+
+// Intercept window boots to set dynamic trackers
+document.addEventListener("DOMContentLoaded", function() {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        renderProfileDetails();
+        forceBindProfileNavigation();
+    }
+});
+
+setTimeout(forceBindProfileNavigation, 1000);
 
     let totalInvested = 0;
     let totalCurrentValue = 0;
