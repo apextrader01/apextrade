@@ -42,26 +42,83 @@ window.onload = function () {
 // 🔄 2. Automatically handle the customer's Google profile response
 function handleGoogleAuthResponse(response) {
     const responsePayload = decodeJwtToken(response.credential);
-    
-    // Extract customer details automatically from Google
-    const customerUser = {
-        username: responsePayload.email,
-        fullName: responsePayload.name,
-        profilePic: responsePayload.picture,
-        clientId: generateAutomatedClientId(responsePayload.name), // e.g., HK382V
-        dob: "2002-05-15", // Placeholder baseline data
-        email: responsePayload.email
-    };
-    
-    // Save customer session in local storage automatically
-     localStorage.setItem('user_credentials', JSON.stringify(customerUser));
-     localStorage.setItem('current_user', JSON.stringify(customerUser));
-     localStorage.setItem('isLoggedIn', 'true');
-     localStorage.setItem('login_status', 'true');
- 
-    // Redirect smoothly into the dashboard terminal
-    alert(`Welcome, ${customerUser.fullName}! Logging in...`);
-    window.location.reload(); 
+
+    function handleGoogleAuthResponse(response) {
+    const responsePayload = decodeJwtToken(response.credential);
+
+    // 1. Break down the incoming Google full name string as base parameters
+    const nameParts = responsePayload.name.trim().split(/\s+/);
+    const defaultFirstName = nameParts[0] || "";
+    const defaultLastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+    const defaultMiddleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+
+    // 2. Pre-fill name fields inside the visible popup form interface
+    document.getElementById('setup-fname').value = defaultFirstName;
+    document.getElementById('setup-mname').value = defaultMiddleName;
+    document.getElementById('setup-lname').value = defaultLastName;
+
+    // 3. Render the interactive modal container on screen
+    const modal = document.getElementById('profile-setup-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // Form submission behavior tracking
+        document.getElementById('profile-setup-form').onsubmit = function(e) {
+            e.preventDefault();
+            
+            // Build reconstructed full name based on clean manual user edits
+            const prefix = document.getElementById('setup-title').value;
+            const fName = document.getElementById('setup-fname').value.trim();
+            const mName = document.getElementById('setup-mname').value.trim();
+            const lName = document.getElementById('setup-lname').value.trim();
+            const combinedFullName = `${prefix} ${fName} ${mName ? mName + ' ' : ''}${lName}`;
+            
+            // 4. Map completely customizable fields into the core customer profile package
+            const customerUser = {
+                username: responsePayload.email,
+                fullName: combinedFullName,
+                profilePic: responsePayload.picture,
+                clientId: generateAutomatedClientId(fName),
+                email: responsePayload.email,
+                dob: document.getElementById('setup-dob').value,
+                gender: document.getElementById('setup-gender').value,
+                classification: document.getElementById('setup-class').value,
+                traderType: document.getElementById('setup-tradertype').value,
+                nomineeName: document.getElementById('setup-nominee-name').value.trim(),
+                nomineeRelation: document.getElementById('setup-nominee-relation').value.trim()
+            };
+            
+            // Commit comprehensive account structures into persistent session engines
+            localStorage.setItem('user_credentials', JSON.stringify(customerUser));
+            localStorage.setItem('current_user', JSON.stringify(customerUser));
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('login_status', 'true');
+            
+            // Clear view frame and execute instant boot seq
+            modal.style.display = 'none';
+            alert(`Welcome, ${customerUser.fullName}! Security onboarding profile locked successfully.`);
+            window.location.reload();
+        };
+    } else {
+        // Safe operational fallback state if structural rendering is blocked
+        const fallbackProfile = {
+            username: responsePayload.email,
+            fullName: "Mr. " + responsePayload.name,
+            profilePic: responsePayload.picture,
+            clientId: generateAutomatedClientId(responsePayload.name),
+            email: responsePayload.email,
+            dob: "2002-05-15",
+            gender: "Male",
+            classification: "Trader",
+            traderType: "ACTIVE",
+            nomineeName: "Not Registered",
+            nomineeRelation: "N/A"
+        };
+        localStorage.setItem('user_credentials', JSON.stringify(fallbackProfile));
+        localStorage.setItem('current_user', JSON.stringify(fallbackProfile));
+        localStorage.setItem('isLoggedIn', 'true');
+        window.location.reload();
+    }
 }
 
 // 🛠️ Helper function to decode Google's secure token
