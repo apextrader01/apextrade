@@ -1,6 +1,5 @@
-// app.js - Live Stock Portfolio & Market Simulation
+// app.js - Optimized Premium Stock Portfolio & Terminal Router Engine
 
-// Check if user session token exists in storage immediately to hide flicker
 // 🔐 Sync Google User Session with the Dashboard Gate Instantly
 if (localStorage.getItem('current_user') && localStorage.getItem('isLoggedIn') !== 'true') {
     localStorage.setItem('isLoggedIn', 'true');
@@ -18,44 +17,22 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
 // 🌟 GOOGLE AUTH CONFIGURATION
 const GOOGLE_CLIENT_ID = "338294665324-uo4kj0ffgsk0eucvlbihj6nvkfmdipo9.apps.googleusercontent.com";
 
-// 🚀 1. Initialize Google Auth when the page loads
-window.onload = function () {
-    if (typeof google !== 'undefined') {
-        google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleGoogleAuthResponse
-        });
-        
-        // Renders the official Google button inside the element with id "google-btn"
-        const btnContainer = document.getElementById("google-btn");
-        if (btnContainer) {
-            google.accounts.id.renderButton(
-                btnContainer,
-                { theme: "outline", size: "large", width: "100%", text: "signin_with" }
-            );
-        }
-        
-        // Displays the native Google One-Tap prompt on the side
-        google.accounts.id.prompt(); 
-    }
-};
-
-// 🔄 2. Automatically handle the customer's Google profile response
+// 🔄 Automatically handle the customer's Google profile response
 function handleGoogleAuthResponse(response) {
     const responsePayload = decodeJwtToken(response.credential);
 
-    // 1. Break down the incoming Google full name string as base parameters
+    // Break down the incoming Google full name string as base parameters
     const nameParts = responsePayload.name.trim().split(/\s+/);
     const defaultFirstName = nameParts[0] || "";
     const defaultLastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
     const defaultMiddleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
 
-    // 2. Pre-fill name fields inside the visible popup form interface
+    // Pre-fill name fields inside the visible popup form interface
     if(document.getElementById('setup-fname')) document.getElementById('setup-fname').value = defaultFirstName;
     if(document.getElementById('setup-mname')) document.getElementById('setup-mname').value = defaultMiddleName;
     if(document.getElementById('setup-lname')) document.getElementById('setup-lname').value = defaultLastName;
 
-    // 3. Render the interactive modal container on screen
+    // Render the interactive modal container on screen
     const modal = document.getElementById('profile-setup-modal');
     if (modal) {
         modal.style.display = 'flex';
@@ -71,7 +48,7 @@ function handleGoogleAuthResponse(response) {
             const lName = document.getElementById('setup-lname').value.trim();
             const combinedFullName = `${prefix} ${fName} ${mName ? mName + ' ' : ''}${lName}`;
             
-            // 4. Map completely customizable fields into the core customer profile package
+            // Map completely customizable fields into the core customer profile package
             const customerUser = {
                 username: responsePayload.email,
                 fullName: combinedFullName,
@@ -93,7 +70,6 @@ function handleGoogleAuthResponse(response) {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('login_status', 'true');
             
-            // Clear view frame and execute instant boot seq
             modal.style.display = 'none';
             alert(`Welcome, ${customerUser.fullName}! Security onboarding profile locked successfully.`);
             window.location.reload();
@@ -355,7 +331,8 @@ function toggleWatchlist(symbol) {
 }
 
 function renderWatchlist() {
-    watchlistCountEl.textContent = `${watchlistSymbols.length} items`;
+    if(watchlistCountEl) watchlistCountEl.textContent = `${watchlistSymbols.length} items`;
+    if (!watchlistList) return;
     if (watchlistSymbols.length === 0) {
         watchlistList.innerHTML = `<div class="empty-holdings" style="grid-column: span 2;">Watchlist empty.</div>`;
         return;
@@ -406,6 +383,7 @@ function renderWatchlist() {
 }
 
 function renderPortfolio() {
+    if(!holdingsList) return;
     if (portfolioHoldings.length === 0) {
         holdingsList.innerHTML = `<div class="empty-holdings">No active stock holdings.</div>`;
     } else {
@@ -443,6 +421,7 @@ function renderPortfolio() {
         });
     }
 
+    if(!activityLogList) return;
     activityLogList.innerHTML = "";
     if (transactionLogs.length === 0) {
         activityLogList.innerHTML = `<div class="dropdown-empty">No transaction history</div>`;
@@ -480,9 +459,11 @@ function renderPortfolio() {
     const netPnlClass = netPnl >= 0 ? "pnl-positive" : "pnl-negative";
     const netSign = netPnl >= 0 ? "+" : "";
 
-    portfolioInvestedEl.textContent = `₹${totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-    portfolioPnlEl.className = `stat-value ${netPnlClass}`;
-    portfolioPnlEl.textContent = `${netSign}₹${netPnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${netSign}${netPnlPercent.toFixed(2)}%)`;
+    if(portfolioInvestedEl) portfolioInvestedEl.textContent = `₹${totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    if(portfolioPnlEl) {
+        portfolioPnlEl.className = `stat-value ${netPnlClass}`;
+        portfolioPnlEl.textContent = `${netSign}₹${netPnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${netSign}${netPnlPercent.toFixed(2)}%)`;
+    }
 }
 
 function updateUI() {
@@ -499,7 +480,7 @@ function updatePortfolioBalance() {
     });
 
     const totalPortfolioValue = holdingsValue + cashBalance;
-    portfolioBalanceEl.textContent = totalPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if(portfolioBalanceEl) portfolioBalanceEl.textContent = totalPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
     let dailyInvested = 0;
     let dailyChangeVal = 0;
@@ -513,8 +494,10 @@ function updatePortfolioBalance() {
 
     const dailyPercent = dailyInvested > 0 ? (dailyChangeVal / dailyInvested) * 100 : 0;
     const isPos = dailyChangeVal >= 0;
-    portfolioChangeBadge.className = `change-badge ${isPos ? "pnl-positive" : "pnl-negative"}`;
-    portfolioChangeBadge.textContent = `${isPos ? "+" : ""}₹${Math.abs(dailyChangeVal).toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${isPos ? "+" : ""}${dailyPercent.toFixed(2)}%)`;
+    if(portfolioChangeBadge) {
+        portfolioChangeBadge.className = `change-badge ${isPos ? "pnl-positive" : "pnl-negative"}`;
+        portfolioChangeBadge.textContent = `${isPos ? "+" : ""}₹${Math.abs(dailyChangeVal).toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${isPos ? "+" : ""}${dailyPercent.toFixed(2)}%)`;
+    }
 }
 
 function startLiveTicker() {}
@@ -576,74 +559,6 @@ function executeTransaction() {
         } else {
             portfolioHoldings.push({ symbol: liveAsset.symbol, qty: qty, avgBuyPrice: executionPrice });
         }
-        // ==========================================================================
-// 📊 MASTER PROFILE PANEL NAVIGATION & LAYOUT OVERLAY ROUTER
-// ==========================================================================
-
-// Override and patch renderProfileDetails to safely sync Google payloads with DOM nodes
-function renderProfileDetails() {
-    const nameDisplay = document.getElementById("profile-client-name");
-    const dobDisplay = document.getElementById("profile-dob-display");
-    const emailDisplay = document.getElementById("profile-email-display");
-    const clientIdDisplay = document.getElementById("profile-client-id");
-    const verificationStatus = document.getElementById("profile-verification-status");
-    const genderDisplay = document.getElementById("profile-gender-display");
-    const experienceDisplay = document.getElementById("profile-experience-display");
-    const segmentsDisplay = document.getElementById("profile-segments-display");
-    
-    // Retrieve dynamic active user storage keys or standard fallbacks
-    const targetSession = localStorage.getItem('current_user') || localStorage.getItem('user_credentials');
-    let creds = {};
-    if (targetSession) {
-        creds = JSON.parse(targetSession);
-    }
-    
-    // Extract properties safely with production fallbacks
-    const fullName = creds.fullName || "Hari Krishnan I V";
-    const dob = creds.dob || "2002-03-19";
-    const email = creds.email || creds.username || "appwebsitetester@gmail.com";
-    const clientId = creds.clientId || "HA02V";
-    const gender = creds.gender || "Male";
-    const experience = creds.experience || "1-3 Years";
-    const segments = creds.segments || ["Cash", "Derivatives"];
-    
-    // Mount text fields to DOM structures safely if nodes are present
-    if (nameDisplay) nameDisplay.textContent = fullName;
-    if (dobDisplay) dobDisplay.textContent = dob;
-    if (emailDisplay) emailDisplay.textContent = email;
-    if (clientIdDisplay) clientIdDisplay.textContent = clientId;
-    if (genderDisplay) genderDisplay.textContent = gender;
-    if (experienceDisplay) experienceDisplay.textContent = experience;
-    if (segmentsDisplay) segmentsDisplay.textContent = (Array.isArray(segments) ? segments.join(", ") : segments);
-    
-    // Render custom profile avatar base64 or secure asset links
-    const userAvatar = localStorage.getItem('user_avatar') || creds.profilePic;
-    const avatarContainer = document.getElementById("profile-avatar-img-container");
-    if (avatarContainer) {
-        if (userAvatar) {
-            avatarContainer.innerHTML = `<img src="${userAvatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
-        } else {
-            avatarContainer.innerHTML = `
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-            `;
-        }
-    }
-    
-    if (verificationStatus) {
-        verificationStatus.textContent = "✓ VERIFIED ACCOUNT";
-        verificationStatus.className = "verification-badge verified";
-    }
-}
-
-// Global UI Live Real-Time Registration Event Binder
-document.addEventListener("DOMContentLoaded", function() {
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-        renderProfileDetails();
-    }
-});
     } else {
         const existingHolding = portfolioHoldings.find(h => h.symbol === liveAsset.symbol);
         if (!existingHolding || existingHolding.qty < qty) return alert("Insufficient holdings!");
@@ -658,9 +573,40 @@ document.addEventListener("DOMContentLoaded", function() {
     closeOrderModal();
 }
 
+// 🌐 MASTER INTEGRATED ROUTER ENGINE
+function showProfilePanel(show) {
+    const profilePanel = document.getElementById("profile-panel");
+    const dashboardMainView = document.getElementById("dashboard-main-view");
+    
+    if (show) {
+        if (dashboardMainView) dashboardMainView.classList.add("hidden");
+        if (profilePanel) {
+            profilePanel.classList.remove("hidden");
+            profilePanel.classList.add("active");
+            profilePanel.style.setProperty('display', 'block', 'important');
+        }
+        renderProfileDetails();
+    } else {
+        if (profilePanel) {
+            profilePanel.classList.add("hidden");
+            profilePanel.classList.remove("active");
+            profilePanel.style.setProperty('display', 'none', 'important');
+        }
+        if (dashboardMainView) {
+            dashboardMainView.classList.remove("hidden");
+            dashboardMainView.style.setProperty('display', 'block', 'important');
+        }
+        
+        // Match standard structural layouts inside mobile devices
+        document.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("active"));
+        const defaultWatchTab = document.querySelector('button[data-tab="watchlist-tab"]');
+        if(defaultWatchTab) defaultWatchTab.classList.add("active");
+    }
+}
+
 function setupTabs() {
     document.querySelectorAll(".tab-btn").forEach(tab => {
-        tab.addEventListener("click", () => {
+        tab.onclick = function() {
             const targetTab = tab.getAttribute("data-tab");
             if (targetTab === "profile-panel") {
                 showProfilePanel(true);
@@ -673,32 +619,23 @@ function setupTabs() {
                 if (document.getElementById(targetTab)) document.getElementById(targetTab).classList.add("active");
                 updateUI();
             }
-        });
+        };
     });
 }
 
-function showProfilePanel(show) {
-    const profilePanel = document.getElementById("profile-panel");
-    const dashboardMainView = document.getElementById("dashboard-main-view");
-    
-    if (show) {
-        if (dashboardMainView) dashboardMainView.classList.add("hidden");
-        if (profilePanel) {
-            profilePanel.classList.remove("hidden");
-            profilePanel.classList.add("active");
-            profilePanel.style.display = "block";
-        }
-        renderProfileDetails();
-    } else {
-        if (profilePanel) {
-            profilePanel.classList.add("hidden");
-            profilePanel.classList.remove("active");
-            profilePanel.style.display = "none";
-        }
-        if (dashboardMainView) {
-            dashboardMainView.classList.remove("hidden");
-            dashboardMainView.style.display = "block";
-        }
+function renderProfileDetails() {
+    const creds = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials'));
+    if (!creds) return;
+
+    if (document.getElementById("profile-client-name")) document.getElementById("profile-client-name").textContent = creds.fullName || "Hari Krishnan I V";
+    if (document.getElementById("profile-dob-display")) document.getElementById("profile-dob-display").textContent = creds.dob || "2002-03-19";
+    if (document.getElementById("profile-email-display")) document.getElementById("profile-email-display").textContent = creds.username || creds.email || "appwebsitetester@gmail.com";
+    if (document.getElementById("profile-client-id")) document.getElementById("profile-client-id").textContent = creds.clientId || "HA02V";
+    if (document.getElementById("profile-gender-display")) document.getElementById("profile-gender-display").textContent = creds.gender || "Male";
+    if (document.getElementById("profile-verification-status")) {
+        const vBadge = document.getElementById("profile-verification-status");
+        vBadge.textContent = "✓ VERIFIED ACCOUNT";
+        vBadge.className = "verification-badge verified";
     }
 }
 
@@ -707,7 +644,7 @@ function startClock() {
         const now = new Date();
         let hours = String(now.getHours()).padStart(2, '0');
         let minutes = String(now.getMinutes()).padStart(2, '0');
-        statusTimeEl.textContent = `${hours}:${minutes}`;
+        if(statusTimeEl) statusTimeEl.textContent = `${hours}:${minutes}`;
     }
     updateClock();
     setInterval(updateClock, 60000);
@@ -778,64 +715,69 @@ function switchFormState() {
     }
 }
 
-function renderProfileDetails() {
-    const creds = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials'));
-    if (!creds) return;
-
-    if (document.getElementById("profile-client-name")) document.getElementById("profile-client-name").textContent = creds.fullName;
-    if (document.getElementById("profile-dob-display")) document.getElementById("profile-dob-display").textContent = creds.dob || "—";
-    if (document.getElementById("profile-email-display")) document.getElementById("profile-email-display").textContent = creds.username || creds.email;
-    if (document.getElementById("profile-client-id")) document.getElementById("profile-client-id").textContent = creds.clientId || "HA02V";
-    if (document.getElementById("profile-gender-display")) document.getElementById("profile-gender-display").textContent = creds.gender || "Male";
-    if (document.getElementById("profile-verification-status")) document.getElementById("profile-verification-status").textContent = "✓ VERIFIED ACCOUNT";
-}
-
 function performLogout() {
-    localStorage.setItem('isLoggedIn', 'false');
-    localStorage.removeItem('current_user');
+    localStorage.clear();
     window.location.reload();
 }
 
 function initializeApp() {
-    if (!authListenersBound) {
-        authForm.addEventListener("submit", handleAuthSubmit);
-        authToggleLink.addEventListener("click", (e) => {
-            e.preventDefault();
-            authMode = authMode === "LOGIN" ? "SIGNUP" : "LOGIN";
-            switchFormState();
-        });
-        logoutBtn.addEventListener("click", performLogout);
-        document.getElementById("otp-verify-btn").addEventListener("click", handleVerifyOtp);
-        authListenersBound = true;
-    }
-
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (!isLoggedIn) {
-        desktopWrapper.classList.add("hidden");
-        authContainer.classList.remove("hidden");
+        if(desktopWrapper) desktopWrapper.classList.add("hidden");
+        if(authContainer) authContainer.classList.remove("hidden");
+        
+        if (!authListenersBound && authForm) {
+            authForm.addEventListener("submit", handleAuthSubmit);
+            if(authToggleLink) {
+                authToggleLink.onclick = function(e) {
+                    e.preventDefault();
+                    authMode = authMode === "LOGIN" ? "SIGNUP" : "LOGIN";
+                    switchFormState();
+                };
+            }
+            const otpVerifyBtn = document.getElementById("otp-verify-btn");
+            if(otpVerifyBtn) otpVerifyBtn.onclick = handleVerifyOtp;
+            authListenersBound = true;
+        }
         return;
     }
 
-    desktopWrapper.classList.remove("hidden");
-    authContainer.classList.add("hidden");
+    if(desktopWrapper) desktopWrapper.classList.remove("hidden");
+    if(authContainer) authContainer.classList.add("hidden");
     
+    // Explicitly bind the avatar headers & profile screen navigation buttons
+    const headerProfileBtn = document.querySelector(".profile-btn");
+    if (headerProfileBtn) {
+        headerProfileBtn.onclick = function() {
+            showProfilePanel(true);
+        };
+    }
+
+    const profileBackBtn = document.getElementById("profile-back-btn");
+    if (profileBackBtn) {
+        profileBackBtn.onclick = function() {
+            showProfilePanel(false);
+        };
+    }
+
+    const backToDashboardBtn = document.getElementById("back-to-dashboard-btn");
+    if (backToDashboardBtn) {
+        backToDashboardBtn.onclick = function() {
+            showProfilePanel(false);
+        };
+    }
+    
+    if(logoutBtn) logoutBtn.onclick = performLogout;
+    
+    // Core event bindings
+    if(searchInput) searchInput.addEventListener("input", handleSearch);
+    if(modalCloseBtn) modalCloseBtn.addEventListener("click", closeOrderModal);
+    if(executeOrderBtn) executeOrderBtn.addEventListener("click", executeTransaction);
+
     startClock();
     setupTabs();
     updateUI();
 }
 
-// 📊 Global UI Real-Time Registration Render Engine
-document.addEventListener("DOMContentLoaded", function() {
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-        const userData = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials'));
-        if (userData) {
-            // Update Core Layout Dashboard Indicators
-            if (document.getElementById('profile-client-name')) document.getElementById('profile-client-name').innerText = userData.fullName || "—";
-            if (document.getElementById('profile-dob-display')) document.getElementById('profile-dob-display').innerText = userData.dob || "—";
-            if (document.getElementById('profile-gender-display')) document.getElementById('profile-gender-display').innerText = userData.gender || "Male";
-            if (document.getElementById('profile-email-display')) document.getElementById('profile-email-display').innerText = userData.email || userData.username || "—";
-        }
-    }
-});
-
+// Global UI Initialization
 window.addEventListener("DOMContentLoaded", initializeApp);
