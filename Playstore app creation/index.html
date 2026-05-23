@@ -475,5 +475,99 @@
     
     <!-- Script Execution -->
     <script src="app.js" defer></script>
+<div id="profile-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 22, 0.96); z-index: 99999; justify-content: center; align-items: center; font-family: sans-serif; color: #fff;">
+    <div style="background: #161c2a; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; border: 1px solid #2a3447; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <h3 style="margin-top: 0; color: #3886ff; font-size: 22px; text-align: center; margin-bottom: 5px;">Complete Your Profile</h3>
+        <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 20px;">Please configure your trading terminal preferences and regulatory details.</p>
+        
+        <form id="profile-setup-form">
+            <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
+                <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">1. Personal Details</h4>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="width: 30%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">TITLE</label>
+                        <select id="setup-title" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                            <option value="Mr.">Mr.</option>
+                            <option value="Mrs.">Mrs.</option>
+                            <option value="Miss">Miss</option>
+                        </select>
+                    </div>
+                    <div style="width: 70%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">FIRST NAME</label>
+                        <input type="text" id="setup-fname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="width: 50%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">MIDDLE NAME</label>
+                        <input type="text" id="setup-mname" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div style="width: 50%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">LAST NAME</label>
+                        <input type="text" id="setup-lname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="width: 50%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">DATE OF BIRTH</label>
+                        <input type="date" id="setup-dob" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div style="width: 50%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">GENDER</label>
+                        <select id="setup-gender" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
+                <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">2. Account Classification</h4>
+                
+                <div style="display: flex; gap: 10px;">
+                    <div style="width: 50%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">CLASSIFICATION</label>
+                        <select id="setup-class" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                            <option value="Trader">Trader</option>
+                            <option value="Investor">Investor</option>
+                        </select>
+                    </div>
+                    <div style="width: 50%;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">TRADER TYPE</label>
+                        <select id="setup-tradertype" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="PASSIVE">PASSIVE</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding-bottom: 20px;">
+                <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">3. Nominee Registration</h4>
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">NOMINEE FULL NAME</label>
+                    <input type="text" id="setup-nominee-name" required placeholder="e.g., Jane Doe" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">RELATIONSHIP WITH ACCOUNT HOLDER</label>
+                    <input type="text" id="setup-nominee-relation" required placeholder="e.g., Mother, Spouse, Brother" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                </div>
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 12px; background: #00c853; border: none; border-radius: 6px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">
+                Save Profile & Launch Terminal
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="app.js" defer></script>
 </body>
 </html>
