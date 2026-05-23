@@ -7,7 +7,70 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
     style.id = 'temp-auth-hide';
     document.head.appendChild(style);
 }
+// 🌟 GOOGLE AUTH CONFIGURATION
+const GOOGLE_CLIENT_ID = "338294665324-uo4kj0ffgsk0eucvlbihj6nvkfmdipo9.apps.googleusercontent.com";
 
+// 🚀 1. Initialize Google Auth when the page loads
+window.onload = function () {
+    if (typeof google !== 'undefined') {
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleAuthResponse
+        });
+        
+        // Renders the official Google button inside the element with id "google-btn"
+        const btnContainer = document.getElementById("google-btn");
+        if (btnContainer) {
+            google.accounts.id.renderButton(
+                btnContainer,
+                { theme: "outline", size: "large", width: "100%", text: "signin_with" }
+            );
+        }
+        
+        // Displays the native Google One-Tap prompt on the side
+        google.accounts.id.prompt(); 
+    }
+};
+
+// 🔄 2. Automatically handle the customer's Google profile response
+function handleGoogleAuthResponse(response) {
+    const responsePayload = decodeJwtToken(response.credential);
+    
+    // Extract customer details automatically from Google
+    const customerUser = {
+        username: responsePayload.email,
+        fullName: responsePayload.name,
+        profilePic: responsePayload.picture,
+        clientId: generateAutomatedClientId(responsePayload.name), // e.g., HK382V
+        dob: "2002-05-15", // Placeholder baseline data
+        email: responsePayload.email
+    };
+    
+    // Save customer session in local storage automatically
+    localStorage.setItem('user_credentials', JSON.stringify(customerUser));
+    localStorage.setItem('current_user', JSON.stringify(customerUser));
+    
+    // Redirect smoothly into the dashboard terminal
+    alert(`Welcome, ${customerUser.fullName}! Logging in...`);
+    window.location.reload(); 
+}
+
+// 🛠️ Helper function to decode Google's secure token
+function decodeJwtToken(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+}
+
+// 🛠️ Helper function to auto-generate a sleek Client ID for new users
+function generateAutomatedClientId(name) {
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    const randomNum = Math.floor(100 + Math.random() * 900);
+    return `${initials}${randomNum}V`;
+}
 // Seed default user credentials if none exist, so the user can log in immediately
 if (!localStorage.getItem('user_credentials')) {
     localStorage.setItem('user_credentials', JSON.stringify({
