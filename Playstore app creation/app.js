@@ -576,6 +576,74 @@ function executeTransaction() {
         } else {
             portfolioHoldings.push({ symbol: liveAsset.symbol, qty: qty, avgBuyPrice: executionPrice });
         }
+        // ==========================================================================
+// 📊 MASTER PROFILE PANEL NAVIGATION & LAYOUT OVERLAY ROUTER
+// ==========================================================================
+
+// Override and patch renderProfileDetails to safely sync Google payloads with DOM nodes
+function renderProfileDetails() {
+    const nameDisplay = document.getElementById("profile-client-name");
+    const dobDisplay = document.getElementById("profile-dob-display");
+    const emailDisplay = document.getElementById("profile-email-display");
+    const clientIdDisplay = document.getElementById("profile-client-id");
+    const verificationStatus = document.getElementById("profile-verification-status");
+    const genderDisplay = document.getElementById("profile-gender-display");
+    const experienceDisplay = document.getElementById("profile-experience-display");
+    const segmentsDisplay = document.getElementById("profile-segments-display");
+    
+    // Retrieve dynamic active user storage keys or standard fallbacks
+    const targetSession = localStorage.getItem('current_user') || localStorage.getItem('user_credentials');
+    let creds = {};
+    if (targetSession) {
+        creds = JSON.parse(targetSession);
+    }
+    
+    // Extract properties safely with production fallbacks
+    const fullName = creds.fullName || "Hari Krishnan I V";
+    const dob = creds.dob || "2002-03-19";
+    const email = creds.email || creds.username || "appwebsitetester@gmail.com";
+    const clientId = creds.clientId || "HA02V";
+    const gender = creds.gender || "Male";
+    const experience = creds.experience || "1-3 Years";
+    const segments = creds.segments || ["Cash", "Derivatives"];
+    
+    // Mount text fields to DOM structures safely if nodes are present
+    if (nameDisplay) nameDisplay.textContent = fullName;
+    if (dobDisplay) dobDisplay.textContent = dob;
+    if (emailDisplay) emailDisplay.textContent = email;
+    if (clientIdDisplay) clientIdDisplay.textContent = clientId;
+    if (genderDisplay) genderDisplay.textContent = gender;
+    if (experienceDisplay) experienceDisplay.textContent = experience;
+    if (segmentsDisplay) segmentsDisplay.textContent = (Array.isArray(segments) ? segments.join(", ") : segments);
+    
+    // Render custom profile avatar base64 or secure asset links
+    const userAvatar = localStorage.getItem('user_avatar') || creds.profilePic;
+    const avatarContainer = document.getElementById("profile-avatar-img-container");
+    if (avatarContainer) {
+        if (userAvatar) {
+            avatarContainer.innerHTML = `<img src="${userAvatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
+        } else {
+            avatarContainer.innerHTML = `
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            `;
+        }
+    }
+    
+    if (verificationStatus) {
+        verificationStatus.textContent = "✓ VERIFIED ACCOUNT";
+        verificationStatus.className = "verification-badge verified";
+    }
+}
+
+// Global UI Live Real-Time Registration Event Binder
+document.addEventListener("DOMContentLoaded", function() {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        renderProfileDetails();
+    }
+});
     } else {
         const existingHolding = portfolioHoldings.find(h => h.symbol === liveAsset.symbol);
         if (!existingHolding || existingHolding.qty < qty) return alert("Insufficient holdings!");
