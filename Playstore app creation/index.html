@@ -1,27 +1,189 @@
-<div id="profile-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 22, 0.95); z-index: 99999; justify-content: center; align-items: center; font-family: sans-serif; color: #fff;">
-    <div style="background: #161c2a; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #2a3447; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <h3 style="margin-top: 0; color: #3886ff; font-size: 20px; text-align: center;">Complete Your Profile</h3>
-        <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 25px;">Please confirm your details to finalize your ApexTrade terminal registration.</p>
-        
-        <form id="profile-setup-form">
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase;">Date of Birth</label>
-                <input type="date" id="setup-dob" required style="width: 100%; padding: 12px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 14px; box-sizing: border-box;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexTrade Terminal</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div class="desktop-wrapper">
+        <header class="main-header">
+            <div class="logo-area">
+                <div class="logo-icon">A</div>
+                <div class="brand-details">
+                    <h1>ApexTrade</h1>
+                    <span class="market-status live"><span class="dot"></span>Live Market</span>
+                </div>
             </div>
             
-            <div style="margin-bottom: 25px;">
-                <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase;">Gender</label>
-                <select id="setup-gender" required style="width: 100%; padding: 12px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 14px; box-sizing: border-box;">
-                    <option value="" disabled selected>Select your gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                </select>
+            <div class="index-ticker">
+                <div class="ticker-item">
+                    <span class="ticker-val">₹1,45,230.50</span>
+                    <span class="ticker-change negative">₹8.61 (-0.01%) <small>TODAY</small></span>
+                </div>
             </div>
-            
-            <button type="submit" style="width: 100%; padding: 12px; background: #00c853; border: none; border-radius: 6px; color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-                SAVE & OPEN TERMINAL
-            </button>
-        </form>
+
+            <div class="search-container">
+                <input type="text" placeholder="Search stocks, commodities (e.g., RELIANCE)...">
+            </div>
+
+            <div class="header-actions">
+                <div id="google-btn"></div>
+                <button class="icon-btn btn-logout" id="logout-trigger" title="Sign Out">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="workspace-layout">
+            <div class="dashboard-grid">
+                <div class="profile-card layout-box">
+                    <h3 class="box-title">Personal KYC Details</h3>
+                    <div class="profile-summary">
+                        <div class="avatar-container">
+                            <div class="avatar-placeholder">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+                                <span class="status-indicator online"></span>
+                            </div>
+                        </div>
+                        <div class="user-meta">
+                            <h2 id="db-user-fullname">Loading Account...</h2>
+                            <div class="meta-row"><span>Date of Birth</span><strong id="db-user-dob">—</strong></div>
+                            <div class="meta-row"><span>Gender</span><strong id="db-user-gender">—</strong></div>
+                            <div class="meta-row"><span>Registered Email</span><strong id="db-user-email">—</strong></div>
+                            <div class="meta-row"><span>Verification Status</span><span class="badge badge-verified">✓ VERIFIED ACCOUNT</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-card layout-box">
+                    <h3 class="box-title">Trading Profile & Metrics</h3>
+                    <div class="metrics-list">
+                        <div class="metric-item"><span>Trading Experience</span><strong>1-3 Years</strong></div>
+                        <div class="metric-item"><span>Trader Type</span><strong id="db-user-tradertype">Active Intraday & Derivatives Trader</strong></div>
+                        <div class="metric-item"><span>Core Strategy</span><strong>VWAP, RSI, & EMA Index Structure (Nifty / Bank Nifty)</strong></div>
+                        <div class="metric-item"><span>Segment Privileges</span><strong>Cash, Derivatives</strong></div>
+                    </div>
+                </div>
+
+                <div class="nominee-card layout-box">
+                    <h3 class="box-title">Account & Nominee Configurations</h3>
+                    <div class="metrics-list">
+                        <div class="metric-item"><span>Client ID</span><strong class="text-blue" id="db-user-clientid">—</strong></div>
+                        <div class="metric-item"><span>Margin Setup</span><strong>Pledged Holdings (50:50 Cash-to-Collateral Rule)</strong></div>
+                        <div class="metric-item"><span>Nominee Status</span><strong class="text-green" id="db-user-nomineestatus">✓ Nominee Registered & Opted In (100% Share Assigned)</strong></div>
+                    </div>
+                </div>
+
+                <div class="gateway-card layout-box full-width">
+                    <h3 class="box-title">Customer Support Gateway</h3>
+                    <div class="gateway-table">
+                        <div class="table-row"><span>Assigned Support Rep</span><strong id="db-rep-name">Hari Krishnan I V (NISM-VIII Certified)</strong></div>
+                        <div class="table-row"><span>Helpdesk Hotline</span><strong>+91 7012419693</strong></div>
+                        <div class="table-row"><span>Support Email</span><strong>businesssolution199@gmail.com</strong></div>
+                        <div class="table-row"><span>Home Branch</span><strong>Trivandrum, Kerala</strong></div>
+                        <div class="table-row"><span>Current Support Status</span><strong class="text-green">Live Token Gateway Active</strong></div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-</div>
+
+    <div id="profile-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 22, 0.96); z-index: 99999; justify-content: center; align-items: center; font-family: sans-serif; color: #fff;">
+        <div style="background: #161c2a; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; border: 1px solid #2a3447; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h3 style="margin-top: 0; color: #3886ff; font-size: 22px; text-align: center; margin-bottom: 5px;">Complete Your Profile</h3>
+            <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 20px;">Please configure your trading terminal preferences and regulatory details.</p>
+            
+            <form id="profile-setup-form">
+                <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">1. Personal Details</h4>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="width: 30%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">TITLE</label>
+                            <select id="setup-title" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                                <option value="Mr.">Mr.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="Miss">Miss</option>
+                            </select>
+                        </div>
+                        <div style="width: 70%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">FIRST NAME</label>
+                            <input type="text" id="setup-fname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="width: 50%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">MIDDLE NAME</label>
+                            <input type="text" id="setup-mname" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div style="width: 50%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">LAST NAME</label>
+                            <input type="text" id="setup-lname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div style="width: 50%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">DATE OF BIRTH</label>
+                            <input type="date" id="setup-dob" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div style="width: 50%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">GENDER</label>
+                            <select id="setup-gender" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">2. Account Classification</h4>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <div style="width: 50%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">CLASSIFICATION</label>
+                            <select id="setup-class" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                                <option value="Trader">Trader</option>
+                                <option value="Investor">Investor</option>
+                            </select>
+                        </div>
+                        <div style="width: 50%;">
+                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">TRADER TYPE</label>
+                            <select id="setup-tradertype" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="PASSIVE">PASSIVE</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding-bottom: 20px;">
+                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">3. Nominee Registration</h4>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">NOMINEE FULL NAME</label>
+                        <input type="text" id="setup-nominee-name" required placeholder="e.g., Jane Doe" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">RELATIONSHIP WITH ACCOUNT HOLDER</label>
+                        <input type="text" id="setup-nominee-relation" required placeholder="e.g., Mother, Spouse, Brother" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                </div>
+                
+                <button type="submit" style="width: 100%; padding: 12px; background: #00c853; border: none; border-radius: 6px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Save Profile & Launch Terminal
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js" defer></script>
+</body>
+</html>
