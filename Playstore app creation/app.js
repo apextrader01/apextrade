@@ -15,6 +15,9 @@ if (localStorage.getItem('isLoggedIn') !== 'true') {
 }
 
 // 🌟 GOOGLE AUTH CONFIGURATION
+const GOOGLE_DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file"; 
+let tokenClient;
+let currentAccessToken = null;
 const GOOGLE_CLIENT_ID = "338294665324-uo4kj0ffgsk0eucvlbihj6nvkfmdipo9.apps.googleusercontent.com";
 
 // 🔄 Automatically handle the customer's Google profile response
@@ -832,7 +835,7 @@ function initializeApp() {
     if(desktopWrapper) desktopWrapper.classList.remove("hidden");
     if(authContainer) authContainer.classList.add("hidden");
     
-    // Explicitly bind the avatar headers & profile screen navigation buttons
+    // Explicitly bind the  headers & profile screen navigation buttons
     const headerProfileBtn = document.querySelector(".profile-btn");
     if (headerProfileBtn) {
         headerProfileBtn.onclick = function() {
@@ -846,6 +849,23 @@ function initializeApp() {
             showProfilePanel(false);
         };
     }
+    // 📸 Handle customer photo uploads and stream to 15GB Google Server bucket
+    const avatarUpload = document.getElementById("avatar-upload");
+    if (avatarUpload) {
+        avatarUpload.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please choose a valid image file layout.');
+                    return;
+                }
+                handleCloudAvatarUpload(file);
+            }
+        };
+    }
+
+    // Initialize the token client tracking hooks on terminal boot
+    initializeGoogleTokenEngine();
 
     const backToDashboardBtn = document.getElementById("back-to-dashboard-btn");
     if (backToDashboardBtn) {
@@ -864,6 +884,104 @@ function initializeApp() {
     startClock();
     setupTabs();
     updateUI();
+}
+// ==========================================================================
+// ☁️ GOOGLE DRIVE 15GB FREE STORAGE MANAGEMENT SYSTEM
+// ==========================================================================
+
+function initializeGoogleTokenEngine() {
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: GOOGLE_DRIVE_SCOPE,
+            callback: (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    currentAccessToken = tokenResponse.access_token;
+                    localStorage.setItem('google_access_token', currentAccessToken);
+                    console.log("Google Drive 15GB Stream Storage Authenticated.");
+                }
+            },
+        });
+    }
+}
+
+async function handleCloudAvatarUpload(file) {
+    if (!currentAccessToken) {
+        currentAccessToken = localStorage.getItem('google_access_token');
+    }
+    if (!currentAccessToken && tokenClient) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+        return;
+    } else if (!tokenClient) {
+        alert("Google Cloud services are initializing. Please wait 5 seconds and retry.");
+        return;
+    }
+
+    try {
+        let folderId = localStorage.getItem('google_drive_folder_id');
+        if (!folderId) {
+            folderId = await getOrCreateDriveFolder(currentAccessToken);
+            if (folderId) localStorage.setItem('google_drive_folder_id', folderId);
+        }
+        await sendFileStreamToGoogleDrive(file, folderId, currentAccessToken);
+    } catch (error) {
+        console.error("Cloud Storage Pipeline Intercept Fault:", error);
+        tokenClient.requestAccessToken({ prompt: 'none' });
+    }
+}
+
+async function getOrCreateDriveFolder(accessToken) {
+    const query = encodeURIComponent("name = 'ApexTrade_Terminal_Assets' and mimeType = 'application/vnd.google-apps.folder' and trashed = false");
+    const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${query}`;
+    const response = await fetch(searchUrl, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+    const data = await response.json();
+    if (data.files && data.files.length > 0) return data.files[0].id;
+    
+    const folderMetadata = { name: 'ApexTrade_Terminal_Assets', mimeType: 'application/vnd.google-apps.folder' };
+    const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(folderMetadata)
+    });
+    const folderData = await createResponse.json();
+    return folderData.id;
+}
+
+function sendFileStreamToGoogleDrive(file, folderId, accessToken) {
+    return new Promise((resolve, reject) => {
+        const boundary = 'apex_terminal_cloud_boundary';
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delimiter = "\r\n--" + boundary + "--";
+        const metadata = { 'name': `avatar_${Date.now()}.jpg`, 'mimeType': file.type || 'image/jpeg', 'parents': [folderId] };
+
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = function() {
+            const base64Data = btoa(new Uint8Array(reader.result).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+            const multipartRequestBody = delimiter + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + delimiter + `Content-Type: ${file.type || 'image/jpeg'}\r\n` + 'Content-Transfer-Encoding: base64\r\n\r\n' + base64Data + close_delimiter;
+
+            fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'multipart/related; boundary=' + boundary },
+                body: multipartRequestBody
+            })
+            .then(res => res.json())
+            .then(fileMetadata => {
+                if (fileMetadata.id) {
+                    const localReader = new FileReader();
+                    localReader.onload = function(evt) {
+                        localStorage.setItem("user_avatar", evt.target.result);
+                        if (document.getElementById("profile-avatar-img-container")) {
+                            document.getElementById("profile-avatar-img-container").innerHTML = `<img src="${evt.target.result}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
+                        }
+                    };
+                    localReader.readAsDataURL(file);
+                    alert("Profile photo synchronized permanently to your Google Server 15GB storage cloud!");
+                    resolve(fileMetadata);
+                } else { reject(fileMetadata); }
+            }).catch(err => reject(err));
+        };
+    });
 }
 
 // Global UI Initialization
