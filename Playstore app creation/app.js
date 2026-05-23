@@ -793,14 +793,20 @@ function initializeGoogleTokenEngine() {
 }
 
 async function handleCloudAvatarUpload(file) {
+    // 🟢 NEW: Wake up the Google engine instantly if it missed the boot window
+    if (!tokenClient) {
+        initializeGoogleTokenEngine();
+    }
+
     if (!currentAccessToken) {
         currentAccessToken = localStorage.getItem('google_access_token');
     }
+    
     if (!currentAccessToken && tokenClient) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
         return;
     } else if (!tokenClient) {
-        alert("Google Cloud services are initializing. Please wait 5 seconds and retry.");
+        alert("Google's security script is being blocked by your browser or is still loading. Please refresh the page and try again.");
         return;
     }
 
