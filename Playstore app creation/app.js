@@ -11,40 +11,42 @@ import {
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // ==========================================================================
-// 2. STATE & MOCK DATA
+// 2. APP STATE
 // ==========================================================================
 let isDashboardInitialized = false;
 let pendingUserId = null;
 let isOtpVerified = false;
 let authMode = "LOGIN";
 
-// ... [INSTRUMENTS_DB, portfolioHoldings, etc., remain unchanged here] ...
-
 // ==========================================================================
-// 3. SECURE AUTHENTICATION CONTROLLER
+// 3. SECURE AUTH CONTROLLER (GLOBAL LISTENER)
 // ==========================================================================
 const authContainer = document.getElementById("auth-container");
 const desktopWrapper = document.querySelector(".desktop-wrapper");
 const authFormContainer = document.getElementById("auth-form");
 const otpSection = document.getElementById("otp-section");
 
-// Handle Session Persistence
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user && isOtpVerified) {
         authContainer?.classList.add("hidden");
         desktopWrapper?.classList.remove("hidden");
-        fetchAndRenderProfile(user.uid);
+        await fetchAndRenderProfile(user.uid);
         if (!isDashboardInitialized) { initializeDashboard(); isDashboardInitialized = true; }
     } else if (user) {
         authFormContainer?.classList.add("hidden");
         otpSection?.classList.remove("hidden");
     } else {
+        isOtpVerified = false;
         desktopWrapper?.classList.add("hidden");
         authContainer?.classList.remove("hidden");
+        authFormContainer?.classList.remove("hidden");
+        otpSection?.classList.add("hidden");
     }
 });
 
-// --- STEP 1: AUTH SUBMISSION ---
+// ==========================================================================
+// 4. STEP 1: AUTH SUBMISSION
+// ==========================================================================
 authFormContainer?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("auth-username").value.trim();
@@ -66,17 +68,19 @@ authFormContainer?.addEventListener("submit", async (e) => {
         await setDoc(doc(db, "users", pendingUserId), { currentOtp: otpCode }, { merge: true });
         await window.emailjs.send("service_apextrade", "template_qfe0n8c", { email, otp_code: otpCode });
         
-        // Trigger UI Switch
         authFormContainer.classList.add("hidden");
         otpSection.classList.remove("hidden");
     } catch (err) {
-        alert("Login failed: " + err.message);
+        console.error("DEBUG ERROR:", err);
+        alert("Login failed: " + (err.message || String(err)));
         submitBtn.disabled = false;
         submitBtn.textContent = "LOG IN";
     }
 });
 
-// --- STEP 2: ATOMIC VERIFICATION ---
+// ==========================================================================
+// 5. STEP 2: ATOMIC VERIFICATION
+// ==========================================================================
 document.getElementById("verify-otp-btn")?.addEventListener("click", async () => {
     const userEnteredOtp = document.getElementById("auth-otp").value.replace(/\s/g, '');
     const btn = document.getElementById("verify-otp-btn");
@@ -91,7 +95,6 @@ document.getElementById("verify-otp-btn")?.addEventListener("click", async () =>
             isOtpVerified = true;
             await setDoc(doc(db, "users", pendingUserId), { currentOtp: null }, { merge: true });
             
-            // Immediate transition
             authContainer.classList.add("hidden");
             desktopWrapper.classList.remove("hidden");
             initializeDashboard();
@@ -101,41 +104,16 @@ document.getElementById("verify-otp-btn")?.addEventListener("click", async () =>
         }
     } catch (err) {
         console.error(err);
+        alert("System error. Try again.");
         btn.textContent = "VERIFY & ENTER TERMINAL";
     }
 });
 
-// --- STEP 2.5: CANCEL ---
-document.getElementById("otp-back-link")?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    await signOut(auth);
-    window.location.reload();
-});
-
-// ... [Keep your fetchAndRenderProfile, initializeDashboard, and logic functions below] ...
 // ==========================================================================
-// 4. CLOUD PROFILE SYNC
+// 6. DASHBOARD ENGINE (Paste your existing functions here)
 // ==========================================================================
-async function fetchAndRenderProfile(uid) {
-    try {
-        const docSnap = await getDoc(doc(db, "users", uid));
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const setField = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
-            
-            setField("profile-client-name", data.fullName);
-            setField("profile-client-id", data.clientId);
-            setField("profile-email-display", data.email);
-            setField("profile-dob-display", data.dob || "Not Provided");
-            
-            if (data.avatarUrl) {
-                const avatarContainer = document.getElementById("profile-avatar-img-container");
-                if (avatarContainer) avatarContainer.innerHTML = `<img src="${data.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-            }
-        }
-    } catch (e) { console.error("Cloud Profile Error:", e); }
-}
-
+// NOTE: Make sure your initializeDashboard, renderWatchlist, 
+// executeTransaction, and helper functions are placed below this line.
 // ==========================================================================
 // 5. DASHBOARD & UI INITIALIZATION
 // ==========================================================================
