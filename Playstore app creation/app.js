@@ -103,76 +103,45 @@ document.getElementById("auth-toggle-link")?.addEventListener("click", (e) => {
     document.getElementById("auth-error-msg")?.classList.add("hidden");
 });
 
-// --- STEP 1: PASSWORD LOGIN / REGISTRATION ---
+// --- STEP 1: PASSWORD LOGIN / REGISTRATION (LOCKED VERSION) ---
 authFormContainer?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("auth-username").value.trim();
     const password = document.getElementById("auth-password").value;
-    const errorMsg = document.getElementById("auth-error-msg");
     const submitBtn = document.getElementById("auth-submit-btn");
 
-    try {
-        errorMsg.classList.add("hidden");
-        submitBtn.textContent = "AUTHENTICATING...";
-        submitBtn.disabled = true;
+    // LOCK: Prevent double-clicks
+    if (submitBtn.disabled) return; 
+    submitBtn.disabled = true;
+    submitBtn.textContent = "AUTHENTICATING...";
 
+    try {
         let userCred;
         if (authMode === "SIGNUP") {
-            const fullName = document.getElementById("auth-fullname")?.value.trim() || "Trader";
-            const dob = document.getElementById("auth-dob")?.value || "";
-            
             userCred = await createUserWithEmailAndPassword(auth, email, password);
-            
-            // Save initial profile
-            await setDoc(doc(db, "users", userCred.user.uid), {
-                fullName: fullName,
-                clientId: fullName.substring(0, 2).toUpperCase() + "02X",
-                email: email,
-                dob: dob,
-                createdAt: new Date().toISOString()
-            });
+            await setDoc(doc(db, "users", userCred.user.uid), { email: email, createdAt: new Date().toISOString() });
         } else {
             userCred = await signInWithEmailAndPassword(auth, email, password);
         }
 
-        pendingUserId = userCred.user.uid;
+        const userId = userCred.user.uid;
+        pendingUserId = userId; // Store the ID
 
-        // Generate Secure 6-Digit Code
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Save to Firestore for verification
-        await setDoc(doc(db, "users", pendingUserId), {
-            currentOtp: otpCode,
-            otpTimestamp: new Date().toISOString()
-        }, { merge: true });
+        // Save OTP to DB
+        await setDoc(doc(db, "users", userId), { currentOtp: otpCode }, { merge: true });
 
-        // Initialize and send with a small delay
-        setTimeout(async () => {
-            try {
-                await window.emailjs.send(
-                    "service_apextrade",
-                    "template_qfe0n8c",
-                    {
-                        email: email,
-                        otp_code: otpCode
-                    },
-                    "C-D1EFjOx7iG0bKbs" // Adding the Public Key directly here is safer!
-                );
-                console.log("Email sent successfully!");
-            } catch (err) {
-                console.error("Transmission Error:", err);
-            }
-        }, 500);
+        // Send Email
+        await window.emailjs.send("service_apextrade", "template_qfe0n8c", { email: email, otp_code: otpCode });
         
-        // Force UI update to transition to the OTP input view
+        // Success: Trigger transition
         onAuthStateChanged(auth, () => {});
 
-    } catch (err) { 
-        errorMsg.textContent = "Error: " + err.message;
-        errorMsg.classList.remove("hidden");
-    } finally {
-        submitBtn.textContent = authMode === "LOGIN" ? "LOG IN" : "SIGN UP & SECURE ACCOUNT";
+    } catch (err) {
+        alert("Login failed: " + err.message);
         submitBtn.disabled = false;
+        submitBtn.textContent = "LOG IN";
     }
 });
 
