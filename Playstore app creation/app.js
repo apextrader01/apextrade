@@ -146,29 +146,24 @@ authFormContainer?.addEventListener("submit", async (e) => {
             otpTimestamp: new Date().toISOString()
         }, { merge: true });
 
-        // ==================================================================
-        // 🚀 LIVE EMAIL DISPATCH VIA EMAILJS (Fully Configured)
-        // ==================================================================
-        emailjs.init({
-          publicKey: "C-D1EFjOx7iG0bKbs", 
-        });
-
-        try {
-            await window.emailjs.send(
-                "service_apextrade",
-                "template_qfe0n8c",
-                {
-                    to_email: email,
-                    otp_code: otpCode
-                }
-            );
-            console.log("Secure verification email delivered to: " + email);
-        } catch (emailError) {
-            console.error("EmailJS Transmission Failure:", emailError);
-            alert("Security System Alert: Dynamic email dispatch failed.");
-        }
-        // ==================================================================
-
+        // Initialize and send with a small delay
+        setTimeout(async () => {
+            try {
+                await window.emailjs.send(
+                    "service_apextrade",
+                    "template_qfe0n8c",
+                    {
+                        to_email: email,
+                        otp_code: otpCode
+                    },
+                    "C-D1EFjOx7iG0bKbs" // Adding the Public Key directly here is safer!
+                );
+                console.log("Email sent successfully!");
+            } catch (err) {
+                console.error("Transmission Error:", err);
+            }
+        }, 500);
+        
         // Force UI update to transition to the OTP input view
         onAuthStateChanged(auth, () => {});
 
