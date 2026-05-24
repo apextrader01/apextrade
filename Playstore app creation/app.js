@@ -2,64 +2,11 @@
 // 1. IMPORTS
 // ==========================================================================
 import { auth, db } from './firebase-init.js';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // ==========================================================================
-// 2. FIREBASE AUTHENTICATION (THE GATEKEEPER)
-// ==========================================================================
-onAuthStateChanged(auth, (user) => {
-    const authContainer = document.getElementById("auth-container");
-    const desktopWrapper = document.querySelector(".desktop-wrapper");
-
-    if (!user) {
-        // Show Login UI
-        desktopWrapper?.classList.add("hidden");
-        authContainer?.classList.remove("hidden");
-    } else {
-        // Show Dashboard
-        authContainer?.classList.add("hidden");
-        desktopWrapper?.classList.remove("hidden");
-        initializeDashboard(); 
-    }
-});
-
-// ==========================================================================
-// 3. LOGIN HANDLER
-// ==========================================================================
-const authForm = document.getElementById("auth-form");
-authForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("auth-username").value;
-    const password = document.getElementById("auth-password").value;
-
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-        alert("Login failed: " + error.message);
-    }
-});
-
-// ==========================================================================
-// 4. DASHBOARD INITIALIZATION
-// ==========================================================================
-function initializeDashboard() {
-    // This runs ONLY when authenticated
-    document.getElementById("logout-btn")?.addEventListener("click", () => signOut(auth));
-    
-    // Bind all your existing UI functions here
-    setupTabs();
-    updateUI();
-    fetchNews();
-}
-
-async function fetchNews() {
-    const newsSnapshot = await getDocs(collection(db, "news"));
-    newsSnapshot.forEach((doc) => console.log("News Item:", doc.data().headline));
-}
-
-// ==========================================================================
-// 5. DATA & UI (Your existing logic)
+// 2. GLOBAL STATE & DATABASE
 // ==========================================================================
 const INSTRUMENTS_DB = [
     { symbol: "TATASTEEL", name: "Tata Steel Ltd.", price: 205.20, change: -1.62 },
@@ -73,25 +20,9 @@ const INSTRUMENTS_DB = [
 
 INSTRUMENTS_DB.forEach(item => item.prevClose = item.price / (1 + item.change / 100));
 
-// ... (Paste your existing setupTabs, updateUI, renderPortfolio, etc. functions below)
-async function fetchNews() {
-    const newsSnapshot = await getDocs(collection(db, "news"));
-    newsSnapshot.forEach((doc) => {
-        console.log("News Item:", doc.data().headline);
-    });
-}
-
-function updateUI() { /* ... your existing render logic ... */ }
-function setupTabs() { /* ... your existing tab logic ... */ }
-
-// Derive prevClose
-INSTRUMENTS_DB.forEach(item => {
-    item.prevClose = item.price / (1 + item.change / 100);
-});
-
-let activeTab           = "watchlist-tab";
-let watchlistSymbols    = ["TATASTEEL", "ADANIPOWER", "WIPRO", "GAIL", "KITEX"];
-let portfolioHoldings   = [
+let activeTab = "watchlist-tab";
+let watchlistSymbols = ["TATASTEEL", "ADANIPOWER", "WIPRO", "GAIL", "KITEX"];
+let portfolioHoldings = [
     { symbol: "TATASTEEL", qty: 200, avgBuyPrice: 198.50 },
     { symbol: "WIPRO",     qty: 250, avgBuyPrice: 190.20 },
     { symbol: "GAIL",      qty: 332, avgBuyPrice: 148.50 },
@@ -103,127 +34,170 @@ let transactionLogs = [
     { type: "BUY", symbol: "GAIL",      qty: 332, price: 148.50, date: "2026-05-22" },
 ];
 
-let activeSearchQuery    = "";
-let selectedAsset        = null;
+let activeSearchQuery = "";
+let selectedAsset = null;
 let currentTransactionType = "BUY";
-
-// Auth state
-let authMode            = "LOGIN";
-let authListenersBound  = false;
-let current_otp         = null;
+let authMode = "LOGIN";
+let isDashboardInitialized = false; // Prevents double-binding of events
 
 // ==========================================================================
-// SEED DEFAULT CREDENTIALS (only if first run)
-// NOTE: Passwords in localStorage are plaintext. For a production deployment,
-// replace this with a hashed credential system or a server-side auth endpoint.
+// 3. FIREBASE AUTHENTICATION (THE GATEKEEPER)
 // ==========================================================================
+const authContainer = document.getElementById("auth-container");
+const desktopWrapper = document.querySelector(".desktop-wrapper");
 
-if (!localStorage.getItem('user_credentials')) {
-    localStorage.setItem('user_credentials', JSON.stringify({
-        username:       "trader101",
-        password:       "password123",
-        fullName:       "Hari Krishnan I V",
-        dob:            "2002-05-15",
-        clientId:       "HA02V",
-        classification: "Trader",
-        traderType:     "ACTIVE",
-    }));
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is logged in: Show Terminal
+        authContainer.classList.add("hidden");
+        desktopWrapper.classList.remove("hidden");
+        
+        if (!isDashboardInitialized) {
+            initializeDashboard();
+            isDashboardInitialized = true;
+        }
+    } else {
+        // User is logged out: Show Login Screen
+        desktopWrapper.classList.add("hidden");
+        authContainer.classList.remove("hidden");
+    }
+});
+
+// ==========================================================================
+// 4. LOGIN / SIGNUP UI LOGIC
+// ==========================================================================
+const authForm = document.getElementById("auth-form");
+const authTitle = document.getElementById("auth-title");
+const authToggleLink = document.getElementById("auth-toggle-link");
+const authSubmitBtn = document.getElementById("auth-submit-btn");
+const authErrorMsg = document.getElementById("auth-error-msg");
+
+// Toggle between Login and Signup modes
+authToggleLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    authMode = authMode === "LOGIN" ? "SIGNUP" : "LOGIN";
+    
+    const isLogin = authMode === "LOGIN";
+    authTitle.textContent = isLogin ? "Log In to ApexTrade" : "Create your Account";
+    authSubmitBtn.textContent = isLogin ? "LOG IN" : "SIGN UP";
+    authToggleLink.textContent = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In";
+    
+    document.querySelectorAll(".signup-only").forEach(el => el.classList.toggle("hidden", isLogin));
+    authErrorMsg.classList.add("hidden");
+});
+
+// Handle Form Submission with Firebase
+authForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("auth-username").value.trim();
+    const password = document.getElementById("auth-password").value;
+    const fullName = document.getElementById("auth-fullname")?.value.trim() || "Trader";
+
+    try {
+        if (authMode === "SIGNUP") {
+            await createUserWithEmailAndPassword(auth, email, password);
+            localStorage.setItem("user_full_name", fullName); // Save name temporarily for profile
+        } else {
+            await signInWithEmailAndPassword(auth, email, password);
+        }
+    } catch (error) {
+        authErrorMsg.textContent = "Error: " + error.message;
+        authErrorMsg.classList.remove("hidden");
+    }
+});
+
+// ==========================================================================
+// 5. TERMINAL DASHBOARD INITIALIZATION
+// ==========================================================================
+function initializeDashboard() {
+    console.log("Terminal Booting...");
+
+    // Bind Logout
+    document.getElementById("logout-btn")?.addEventListener("click", () => {
+        signOut(auth);
+    });
+
+    // Bind Search
+    const searchInput = document.getElementById("search-input");
+    const searchClearBtn = document.getElementById("search-clear-btn");
+    
+    searchInput?.addEventListener("input", handleSearch);
+    searchClearBtn?.addEventListener("click", () => {
+        if(searchInput) searchInput.value = "";
+        handleSearch({ target: { value: "" } });
+    });
+
+    // Bind Order Modal Buttons
+    document.getElementById("modal-close-btn")?.addEventListener("click", closeOrderModal);
+    document.getElementById("execute-order-btn")?.addEventListener("click", executeTransaction);
+    
+    const toggleBuyBtn = document.getElementById("toggle-buy-btn");
+    const toggleSellBtn = document.getElementById("toggle-sell-btn");
+    const transactionQtyInput = document.getElementById("transaction-qty");
+
+    toggleBuyBtn?.addEventListener("click", () => {
+        currentTransactionType = "BUY";
+        toggleBuyBtn.classList.add("active");
+        toggleSellBtn?.classList.remove("active");
+        if (selectedAsset) updateModalCalculations(selectedAsset.price);
+    });
+
+    toggleSellBtn?.addEventListener("click", () => {
+        currentTransactionType = "SELL";
+        toggleSellBtn.classList.add("active");
+        toggleBuyBtn?.classList.remove("active");
+        if (selectedAsset) updateModalCalculations(selectedAsset.price);
+    });
+
+    transactionQtyInput?.addEventListener("input", () => {
+        if (selectedAsset) updateModalCalculations(selectedAsset.price);
+    });
+
+    // Bind Profile Nav
+    document.querySelector(".profile-btn")?.addEventListener("click", () => showProfilePanel(true));
+    document.getElementById("profile-back-btn")?.addEventListener("click", () => showProfilePanel(false));
+    document.getElementById("back-to-dashboard-btn")?.addEventListener("click", () => showProfilePanel(false));
+
+    // Bind Cloud Avatar Upload
+    const cloudSyncBtn = document.getElementById("cloud-sync-btn");
+    const avatarUpload = document.getElementById("avatar-upload");
+    cloudSyncBtn?.addEventListener("click", () => {
+        const file = avatarUpload?.files[0];
+        if (!file) { alert("Please select a photo first."); return; }
+        handleCloudAvatarUpload(file);
+    });
+
+    // Restore saved avatar if present
+    const savedAvatar = localStorage.getItem("user_avatar");
+    const avatarContainer = document.getElementById("profile-avatar-img-container");
+    if (savedAvatar && avatarContainer) {
+        avatarContainer.innerHTML = `<img src="${savedAvatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
+    }
+
+    setupTabs();
+    updateUI();
 }
 
 // ==========================================================================
-// DOM REFERENCES
+// 6. TERMINAL LOGIC (Search, Portfolio, Watchlist, Modals)
 // ==========================================================================
 
-const searchInput          = document.getElementById("search-input");
-const searchClearBtn       = document.getElementById("search-clear-btn");
-const searchDropdown       = document.getElementById("search-dropdown");
-const searchDropdownList   = document.getElementById("search-dropdown-list");
-const watchlistList        = document.getElementById("watchlist-list");
-const holdingsList         = document.getElementById("holdings-list");
-const activityLogList      = document.getElementById("activity-log-list");
-const portfolioBalanceEl   = document.getElementById("portfolio-balance");
-const portfolioChangeBadge = document.getElementById("portfolio-change-badge");
-const portfolioInvestedEl  = document.getElementById("portfolio-invested");
-const portfolioPnlEl       = document.getElementById("portfolio-pnl");
-const watchlistCountEl     = document.getElementById("watchlist-count");
-
-const transactionModal     = document.getElementById("transaction-modal");
-const modalTicker          = document.getElementById("modal-ticker");
-const modalName            = document.getElementById("modal-name");
-const modalLivePrice       = document.getElementById("modal-live-price");
-const modalCloseBtn        = document.getElementById("modal-close-btn");
-const toggleBuyBtn         = document.getElementById("toggle-buy-btn");
-const toggleSellBtn        = document.getElementById("toggle-sell-btn");
-const transactionQtyInput  = document.getElementById("transaction-qty");
-const modalOrderValue      = document.getElementById("modal-order-value");
-const modalTradingFee      = document.getElementById("modal-trading-fee");
-const executeOrderBtn      = document.getElementById("execute-order-btn");
-
-const authContainer         = document.getElementById("auth-container");
-const desktopWrapper        = document.querySelector(".desktop-wrapper");
-const authForm              = document.getElementById("auth-form");
-const authUsernameInput     = document.getElementById("auth-username");
-const authPasswordInput     = document.getElementById("auth-password");
-const authErrorMsg          = document.getElementById("auth-error-msg");
-const authSubmitBtn         = document.getElementById("auth-submit-btn");
-const authTitle             = document.getElementById("auth-title");
-const authSubtitle          = document.getElementById("auth-subtitle");
-const authToggleLink        = document.getElementById("auth-toggle-link");
-const logoutBtn             = document.getElementById("logout-btn");
-
-// ==========================================================================
-// UTILITY HELPERS
-// ==========================================================================
-
-/** Normalise a string for fuzzy search (removes spaces, uppercases). */
 function flattenString(str) {
     return str ? str.replace(/\s+/g, '').toUpperCase() : "";
 }
 
-/**
- * Generates a deterministic Client ID from a full name and date-of-birth.
- * Format: [First2LettersOfName][Last2DigitsOfYear][LastLetterOfName]
- * Example: "Hari Krishnan", "2002-05-15" → "HA02N"
- */
-function generateClientId(fullName, dob) {
-    if (!fullName || !dob) return "";
-    const cleaned = fullName.trim();
-    if (cleaned.length < 2) return "";
-
-    const firstTwo  = cleaned.substring(0, 2).toUpperCase();
-    const lastLetter = cleaned.slice(-1).toUpperCase();
-
-    let birthYear = "";
-    if (dob.includes("-")) {
-        const parts = dob.split("-");
-        birthYear = parts[0].length === 4 ? parts[0] : parts[parts.length - 1];
-    } else {
-        birthYear = new Date(dob).getFullYear().toString();
-    }
-    const lastTwoYear = birthYear.slice(-2);
-
-    return `${firstTwo}${lastTwoYear}${lastLetter}`;
-}
-
-/** Returns the stored credentials object, preferring the active session key. */
-function getStoredCredentials() {
-    const raw = localStorage.getItem('current_user') || localStorage.getItem('user_credentials');
-    try { return raw ? JSON.parse(raw) : null; } catch { return null; }
-}
-
-// ==========================================================================
-// SEARCH
-// ==========================================================================
-
 function handleSearch(event) {
     const rawValue = event.target.value;
     activeSearchQuery = rawValue;
+    const searchClearBtn = document.getElementById("search-clear-btn");
+    const searchDropdown = document.getElementById("search-dropdown");
+    const searchDropdownList = document.getElementById("search-dropdown-list");
 
-    searchClearBtn.classList.toggle("hidden", rawValue.length === 0);
+    searchClearBtn?.classList.toggle("hidden", rawValue.length === 0);
 
     const query = flattenString(rawValue);
     if (query === "") {
-        searchDropdown.classList.add("hidden");
+        searchDropdown?.classList.add("hidden");
         return;
     }
 
@@ -231,32 +205,24 @@ function handleSearch(event) {
         flattenString(item.symbol).includes(query) ||
         flattenString(item.name).includes(query)
     );
-    renderSearchResults(results);
-}
-
-function renderSearchResults(results) {
+    
     if (results.length === 0) {
-        searchDropdownList.innerHTML = `<div class="dropdown-empty">No assets matching search</div>`;
-        searchDropdown.classList.remove("hidden");
+        if(searchDropdownList) searchDropdownList.innerHTML = `<div class="dropdown-empty">No assets matching search</div>`;
+        searchDropdown?.classList.remove("hidden");
         return;
     }
 
-    searchDropdownList.innerHTML = "";
+    if(searchDropdownList) searchDropdownList.innerHTML = "";
     results.forEach(item => renderInstrumentRow(item, searchDropdownList, true));
-    searchDropdown.classList.remove("hidden");
+    searchDropdown?.classList.remove("hidden");
 }
 
-// ==========================================================================
-// SHARED INSTRUMENT ROW RENDERER
-// Extracted so watchlist and search use identical markup without duplication.
-// ==========================================================================
-
-function renderInstrumentRow(item, container, showAddRemoveStar = false) {
+function renderInstrumentRow(item, container) {
     const isPositive = item.change >= 0;
     const changeClass = isPositive ? "text-positive" : "text-negative";
-    const sign        = isPositive ? "+" : "";
-    const isWatched   = watchlistSymbols.includes(item.symbol);
-    const starFill    = isWatched ? 'currentColor' : 'none';
+    const sign = isPositive ? "+" : "";
+    const isWatched = watchlistSymbols.includes(item.symbol);
+    const starFill = isWatched ? 'currentColor' : 'none';
 
     const row = document.createElement("div");
     row.className = "instrument-row";
@@ -278,7 +244,7 @@ function renderInstrumentRow(item, container, showAddRemoveStar = false) {
                 <span class="instrument-price">₹${item.price.toFixed(2)}</span>
                 <span class="instrument-change ${changeClass}">${sign}${item.change.toFixed(2)}%</span>
             </div>
-            <button class="action-icon-btn ${isWatched ? 'watched' : ''}" data-symbol="${item.symbol}" aria-label="${isWatched ? 'Remove from watchlist' : 'Add to watchlist'}">
+            <button class="action-icon-btn ${isWatched ? 'watched' : ''}" data-symbol="${item.symbol}">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="${starFill}" stroke="currentColor" stroke-width="2">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
@@ -294,10 +260,6 @@ function renderInstrumentRow(item, container, showAddRemoveStar = false) {
     container.appendChild(row);
 }
 
-// ==========================================================================
-// WATCHLIST
-// ==========================================================================
-
 function toggleWatchlist(symbol) {
     const index = watchlistSymbols.indexOf(symbol);
     if (index > -1) { watchlistSymbols.splice(index, 1); }
@@ -306,6 +268,9 @@ function toggleWatchlist(symbol) {
 }
 
 function renderWatchlist() {
+    const watchlistCountEl = document.getElementById("watchlist-count");
+    const watchlistList = document.getElementById("watchlist-list");
+    
     if (watchlistCountEl) watchlistCountEl.textContent = `${watchlistSymbols.length} items`;
     if (!watchlistList) return;
 
@@ -317,18 +282,15 @@ function renderWatchlist() {
     watchlistList.innerHTML = "";
     watchlistSymbols.forEach(symbol => {
         const item = INSTRUMENTS_DB.find(i => i.symbol === symbol);
-        if (item) renderInstrumentRow(item, watchlistList, true);
+        if (item) renderInstrumentRow(item, watchlistList);
     });
 }
 
-// ==========================================================================
-// PORTFOLIO & ACTIVITY LOG
-// ==========================================================================
-
 function renderPortfolio() {
+    const holdingsList = document.getElementById("holdings-list");
     if (!holdingsList) return;
 
-    let totalInvested     = 0;
+    let totalInvested = 0;
     let totalCurrentValue = 0;
 
     if (portfolioHoldings.length === 0) {
@@ -378,6 +340,9 @@ function renderPortfolio() {
     const netPnlClass   = netPnl >= 0 ? "pnl-positive" : "pnl-negative";
     const netSign       = netPnl >= 0 ? "+" : "";
 
+    const portfolioInvestedEl = document.getElementById("portfolio-invested");
+    const portfolioPnlEl = document.getElementById("portfolio-pnl");
+
     if (portfolioInvestedEl) {
         portfolioInvestedEl.textContent = `₹${totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
     }
@@ -388,6 +353,7 @@ function renderPortfolio() {
 }
 
 function renderActivityLog() {
+    const activityLogList = document.getElementById("activity-log-list");
     if (!activityLogList) return;
 
     if (transactionLogs.length === 0) {
@@ -427,6 +393,9 @@ function updatePortfolioBalance() {
     });
 
     const totalPortfolioValue = holdingsValue + cashBalance;
+    const portfolioBalanceEl = document.getElementById("portfolio-balance");
+    const portfolioChangeBadge = document.getElementById("portfolio-change-badge");
+
     if (portfolioBalanceEl) {
         portfolioBalanceEl.textContent = totalPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
     }
@@ -446,57 +415,60 @@ function updateUI() {
 }
 
 // ==========================================================================
-// ORDER MODAL
+// 7. ORDER MODAL & TRANSACTIONS
 // ==========================================================================
 
 function openOrderModal(asset) {
     selectedAsset = asset;
-
-    if (modalTicker)    modalTicker.textContent    = asset.symbol;
-    if (modalName)      modalName.textContent      = asset.name;
-    if (modalLivePrice) modalLivePrice.textContent = asset.price.toFixed(2);
+    
+    document.getElementById("modal-ticker").textContent = asset.symbol;
+    document.getElementById("modal-name").textContent = asset.name;
+    document.getElementById("modal-live-price").textContent = asset.price.toFixed(2);
 
     currentTransactionType = "BUY";
-    if (toggleBuyBtn)  toggleBuyBtn.classList.add("active");
-    if (toggleSellBtn) toggleSellBtn.classList.remove("active");
+    document.getElementById("toggle-buy-btn")?.classList.add("active");
+    document.getElementById("toggle-sell-btn")?.classList.remove("active");
 
-    if (transactionQtyInput) {
-        transactionQtyInput.value = "10";
+    const qtyInput = document.getElementById("transaction-qty");
+    if (qtyInput) {
+        qtyInput.value = "10";
         updateModalCalculations(asset.price);
     }
 
-    if (transactionModal) transactionModal.classList.remove("hidden");
+    document.getElementById("transaction-modal")?.classList.remove("hidden");
 }
 
 function updateModalCalculations(price) {
-    if (!transactionQtyInput) return;
-    const qty    = parseInt(transactionQtyInput.value) || 0;
+    const qtyInput = document.getElementById("transaction-qty");
+    if (!qtyInput) return;
+    const qty    = parseInt(qtyInput.value) || 0;
     const estVal = qty * price;
     const fee    = estVal * 0.0005;
 
-    if (modalOrderValue) modalOrderValue.textContent = estVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-    if (modalTradingFee) modalTradingFee.textContent = fee.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    document.getElementById("modal-order-value").textContent = estVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    document.getElementById("modal-trading-fee").textContent = fee.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
-    if (executeOrderBtn) {
+    const executeBtn = document.getElementById("execute-order-btn");
+    if (executeBtn) {
         if (currentTransactionType === "BUY") {
-            executeOrderBtn.className   = "btn-execute-order btn-buy";
-            executeOrderBtn.textContent = `CONFIRM BUY ORDER (₹${(estVal + fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+            executeBtn.className   = "btn-execute-order btn-buy";
+            executeBtn.textContent = `CONFIRM BUY ORDER (₹${(estVal + fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
         } else {
-            executeOrderBtn.className   = "btn-execute-order btn-sell";
-            executeOrderBtn.textContent = `CONFIRM SELL ORDER (₹${(estVal - fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+            executeBtn.className   = "btn-execute-order btn-sell";
+            executeBtn.textContent = `CONFIRM SELL ORDER (₹${(estVal - fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
         }
     }
 }
 
 function closeOrderModal() {
-    if (transactionModal) transactionModal.classList.add("hidden");
+    document.getElementById("transaction-modal")?.classList.add("hidden");
     selectedAsset = null;
 }
 
 function executeTransaction() {
     if (!selectedAsset) return;
 
-    const qty = parseInt(transactionQtyInput.value);
+    const qty = parseInt(document.getElementById("transaction-qty")?.value);
     if (!qty || qty <= 0) { alert("Please enter a valid quantity."); return; }
 
     const liveAsset      = INSTRUMENTS_DB.find(i => i.symbol === selectedAsset.symbol);
@@ -538,7 +510,7 @@ function executeTransaction() {
 }
 
 // ==========================================================================
-// PROFILE PANEL
+// 8. PROFILE PANEL & GOOGLE DRIVE BRIDGE
 // ==========================================================================
 
 function showProfilePanel(show) {
@@ -561,30 +533,25 @@ function showProfilePanel(show) {
 }
 
 function renderProfileDetails() {
-    const creds = getStoredCredentials();
-    if (!creds) return;
+    const user = auth.currentUser;
+    if (!user) return;
+
+    // Build the user profile from Firebase + Local
+    const email = user.email;
+    const fullName = localStorage.getItem("user_full_name") || "Trader";
+    const clientId = fullName.substring(0, 2).toUpperCase() + "02X"; // Simulated Client ID
 
     const setField = (id, value) => {
         const el = document.getElementById(id);
         if (el && value) el.textContent = value;
     };
 
-    setField("profile-client-name",        creds.fullName);
-    setField("profile-dob-display",        creds.dob);
-    setField("profile-email-display",      creds.username || creds.email);
-    setField("profile-client-id",          creds.clientId);
-    setField("profile-gender-display",     creds.gender);
-
-    const vBadge = document.getElementById("profile-verification-status");
-    if (vBadge) {
-        vBadge.textContent = "✓ VERIFIED ACCOUNT";
-        vBadge.className   = "verification-badge verified";
-    }
+    setField("profile-client-name", fullName);
+    setField("profile-email-display", email);
+    setField("profile-client-id", clientId);
+    setField("profile-dob-display", "2002-05-15"); // Simulated
+    setField("profile-gender-display", "Male"); // Simulated
 }
-
-// ==========================================================================
-// TAB NAVIGATION
-// ==========================================================================
 
 function setupTabs() {
     document.querySelectorAll(".tab-btn").forEach(tab => {
@@ -609,92 +576,6 @@ function setupTabs() {
     });
 }
 
-// ==========================================================================
-// AUTHENTICATION
-// ==========================================================================
-
-function switchFormState() {
-    const isLogin = authMode === "LOGIN";
-    if (authTitle)     authTitle.textContent     = isLogin ? "Log In to ApexTrade" : "Create your Account";
-    if (authSubmitBtn) authSubmitBtn.textContent  = isLogin ? "LOG IN" : "SIGN UP";
-    document.querySelectorAll(".signup-only").forEach(el => el.classList.toggle("hidden", isLogin));
-}
-
-function showAuthError(message) {
-    if (authErrorMsg) {
-        authErrorMsg.textContent = message;
-        authErrorMsg.classList.remove("hidden");
-    }
-}
-
-function handleAuthSubmit(event) {
-    event.preventDefault();
-    if (!authUsernameInput || !authPasswordInput) return;
-
-    const username = authUsernameInput.value.trim();
-    const password = authPasswordInput.value;
-
-    if (authMode === "SIGNUP") {
-        const fullNameInput = document.getElementById("auth-fullname");
-        const dobInput      = document.getElementById("auth-dob");
-        const fullName      = fullNameInput?.value.trim() || "New User";
-        const dob           = dobInput?.value || "2000-01-01";
-
-        localStorage.setItem('user_credentials', JSON.stringify({
-            username, password, fullName, dob,
-            clientId:       "Pending",
-            classification: "Trader",
-            traderType:     "ACTIVE",
-        }));
-
-        // OTP is generated and shown via alert.
-        // TODO: Replace with a server-side delivery mechanism (email/SMS) before production.
-        current_otp = Math.floor(1000 + Math.random() * 9000);
-        alert(`[ApexTrade Security] Your One-Time Password (OTP) is: ${current_otp}`);
-
-        authForm?.classList.add("hidden");
-        authTitle?.classList.add("hidden");
-        authSubtitle?.classList.add("hidden");
-        document.getElementById("otp-container")?.classList.remove("hidden");
-
-    } else {
-        const stored = JSON.parse(localStorage.getItem('user_credentials'));
-        if (stored && stored.username === username && stored.password === password) {
-            localStorage.setItem('isLoggedIn', 'true');
-            window.location.reload();
-        } else {
-            showAuthError("Invalid username or password.");
-        }
-    }
-}
-
-function handleVerifyOtp() {
-    const digits = ["otp-1", "otp-2", "otp-3", "otp-4"].map(id => document.getElementById(id)?.value || "");
-    const typedOtp = digits.join("");
-
-    if (typedOtp === String(current_otp)) {
-        const creds     = JSON.parse(localStorage.getItem('user_credentials'));
-        creds.clientId  = generateClientId(creds.fullName, creds.dob);
-        localStorage.setItem('user_credentials', JSON.stringify(creds));
-        localStorage.setItem('isLoggedIn', 'true');
-        window.location.reload();
-    } else {
-        document.getElementById("otp-error-msg")?.classList.remove("hidden");
-    }
-}
-
-function performLogout() {
-    localStorage.clear();
-    window.location.reload();
-}
-
-// ==========================================================================
-// ADMIN BRIDGE — Secure Cloud Storage (Google Apps Script)
-// The frontend POSTs base64-encoded file data to the Apps Script web app.
-// The Apps Script runs as Admin and writes to Google Drive server-side.
-// No OAuth popup is ever triggered for the end user.
-// ==========================================================================
-
 const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKWfkH0yGcH-wf0IE7NByB_ZqqbZPaalaQMuNuGVClzYeBpIeCvrbYTGjq6s5amugh/exec";
 
 async function handleCloudAvatarUpload(file) {
@@ -706,14 +587,11 @@ async function handleCloudAvatarUpload(file) {
     const cloudBtn = document.getElementById("cloud-sync-btn");
     if (cloudBtn) cloudBtn.textContent = "⏳ Uploading securely...";
 
-    const creds      = getStoredCredentials();
-    const customerId = creds?.clientId || "Unknown_Customer";
-
     const reader = new FileReader();
     reader.onload = async function () {
         const base64String = reader.result.split(',')[1];
         const payload = {
-            filename: `${customerId}_profile_photo.jpg`,
+            filename: `profile_photo.jpg`,
             mimeType: file.type || 'image/jpeg',
             base64:   base64String,
         };
@@ -726,17 +604,14 @@ async function handleCloudAvatarUpload(file) {
             const result = await response.json();
 
             if (result.status === 'success') {
-             
-if (result.status === 'success') {
-            localStorage.setItem("user_avatar", reader.result);
-            const avatarContainer = document.getElementById("profile-avatar-img-container");
-            if (avatarContainer) {
-                avatarContainer.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
-            }
-            alert("Photo updated!"); // Success path
-        } else {
-            alert("Photo upload failed."); // Failure path
-        }
+                localStorage.setItem("user_avatar", reader.result);
+                const avatarContainer = document.getElementById("profile-avatar-img-container");
+                if (avatarContainer) {
+                    avatarContainer.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
+                }
+                alert("Photo updated to Google Drive successfully!"); 
+            } else {
+                alert("Photo upload failed."); 
             }
         } catch (error) {
             console.error("Bridge Transmission Error:", error);
@@ -747,91 +622,3 @@ if (result.status === 'success') {
     };
     reader.readAsDataURL(file);
 }
-
-// ==========================================================================
-// APP INITIALIZATION
-// ==========================================================================
-
-function initializeApp() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-    if (!isLoggedIn) {
-        desktopWrapper?.classList.add("hidden");
-        authContainer?.classList.remove("hidden");
-
-        if (!authListenersBound && authForm) {
-            authForm.addEventListener("submit", handleAuthSubmit);
-            authToggleLink?.addEventListener("click", e => {
-                e.preventDefault();
-                authMode = authMode === "LOGIN" ? "SIGNUP" : "LOGIN";
-                switchFormState();
-            });
-            document.getElementById("otp-verify-btn")?.addEventListener("click", handleVerifyOtp);
-            authListenersBound = true;
-        }
-        return;
-    }
-
-    // --- AUTHENTICATED STATE ---
-    document.getElementById('temp-auth-hide')?.remove();
-    desktopWrapper?.classList.remove("hidden");
-    authContainer?.classList.add("hidden");
-
-    // Restore saved avatar if present
-    const savedAvatar = localStorage.getItem("user_avatar");
-    if (savedAvatar) {
-        const avatarContainer = document.getElementById("profile-avatar-img-container");
-        if (avatarContainer) {
-            avatarContainer.innerHTML = `<img src="${savedAvatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
-        }
-    }
-
-    // Navigation bindings
-    document.querySelector(".profile-btn")?.addEventListener("click", () => showProfilePanel(true));
-    document.getElementById("profile-back-btn")?.addEventListener("click",    () => showProfilePanel(false));
-    document.getElementById("back-to-dashboard-btn")?.addEventListener("click", () => showProfilePanel(false));
-
-    // Cloud avatar upload — bound here once; the global binding below is removed.
-    const cloudSyncBtn = document.getElementById("cloud-sync-btn");
-    const avatarUpload = document.getElementById("avatar-upload");
-    if (cloudSyncBtn && avatarUpload) {
-        cloudSyncBtn.addEventListener("click", () => {
-            const file = avatarUpload.files[0];
-            if (!file) { alert("Please select a photo first."); return; }
-            handleCloudAvatarUpload(file);
-        });
-    }
-
-    // Core dashboard bindings
-    logoutBtn?.addEventListener("click", performLogout);
-    searchInput?.addEventListener("input", handleSearch);
-    modalCloseBtn?.addEventListener("click", closeOrderModal);
-    executeOrderBtn?.addEventListener("click", executeTransaction);
-
-    if (toggleBuyBtn) {
-        toggleBuyBtn.addEventListener("click", () => {
-            currentTransactionType = "BUY";
-            toggleBuyBtn.classList.add("active");
-            toggleSellBtn?.classList.remove("active");
-            if (selectedAsset) updateModalCalculations(selectedAsset.price);
-        });
-    }
-    if (toggleSellBtn) {
-        toggleSellBtn.addEventListener("click", () => {
-            currentTransactionType = "SELL";
-            toggleSellBtn.classList.add("active");
-            toggleBuyBtn?.classList.remove("active");
-            if (selectedAsset) updateModalCalculations(selectedAsset.price);
-        });
-    }
-    if (transactionQtyInput) {
-        transactionQtyInput.addEventListener("input", () => {
-            if (selectedAsset) updateModalCalculations(selectedAsset.price);
-        });
-    }
-
-    setupTabs();
-    updateUI();
-}
-
-window.addEventListener("DOMContentLoaded", initializeApp);
