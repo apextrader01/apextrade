@@ -728,10 +728,24 @@ function initializeApp() {
     // Check if the user previously uploaded a photo and display it immediately
     const savedAvatar = localStorage.getItem("user_avatar");
     if (savedAvatar) {
-        const avatarContainer = document.getElementById("profile-avatar-img-container");
-        if (avatarContainer) {
-            avatarContainer.innerHTML = `<img src="${savedAvatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
-        }
+       // 📸 Handle customer photo uploads and stream to 15GB Google Server bucket
+    const avatarUpload = document.getElementById("avatar-upload");
+    const cloudSyncBtn = document.getElementById("cloud-sync-btn");
+    
+    if (cloudSyncBtn && avatarUpload) {
+        cloudSyncBtn.onclick = function() {
+            const file = avatarUpload.files[0];
+            if (!file) {
+                alert("Please select a photo first!");
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                alert('Please choose a valid image file layout.');
+                return;
+            }
+            // Because this is a direct click, the browser WILL allow the Google Popup!
+            handleCloudAvatarUpload(file);
+        };
     }
 
     // Explicitly bind the headers & profile screen navigation buttons
