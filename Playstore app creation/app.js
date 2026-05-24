@@ -17,9 +17,9 @@ const INSTRUMENTS_DB = [
     { symbol: "NIFTY50", name: "Nifty 50 Index", price: 22530.70, change: 0.45 },
     { symbol: "BANKNIFTY", name: "Nifty Bank Index", price: 48923.55, change: -0.12 },
     { symbol: "TATASTEEL", name: "Tata Steel Ltd.", price: 205.20, change: -1.62 },
-    { symbol: "WIPRO", name: "Wipro Ltd.", price: 202.97, change: 0.15 },
-    { symbol: "GAIL", name: "GAIL India Ltd.", price: 160.77, change: 1.12 },
-    { symbol: "RELIANCE", name: "Reliance Ind.", price: 2930.10, change: 1.05 }
+    { symbol: "WIPRO",     name: "Wipro Ltd.", price: 202.97, change: 0.15 },
+    { symbol: "GAIL",      name: "GAIL India Ltd.", price: 160.77, change: 1.12 },
+    { symbol: "RELIANCE",  name: "Reliance Ind.", price: 2930.10, change: 1.05 }
 ];
 
 INSTRUMENTS_DB.forEach(item => item.prevClose = item.price / (1 + item.change / 100));
@@ -60,7 +60,8 @@ onAuthStateChanged(auth, async (user) => {
             otpSection?.classList.remove("hidden");
             
             // Hide the "Don't have an account" toggle links on OTP screen
-            document.querySelector(".auth-card > .auth-toggle-container").style.display = "none";
+            const toggleContainer = document.querySelector(".auth-card > .auth-toggle-container");
+            if (toggleContainer) toggleContainer.style.display = "none";
             return;
         }
         
@@ -81,7 +82,8 @@ onAuthStateChanged(auth, async (user) => {
         authContainer?.classList.remove("hidden");
         authFormContainer?.classList.remove("hidden");
         otpSection?.classList.add("hidden");
-        document.querySelector(".auth-card > .auth-toggle-container").style.display = "block";
+        const toggleContainer = document.querySelector(".auth-card > .auth-toggle-container");
+        if (toggleContainer) toggleContainer.style.display = "block";
     }
 });
 
@@ -144,23 +146,20 @@ authFormContainer?.addEventListener("submit", async (e) => {
             otpTimestamp: new Date().toISOString()
         }, { merge: true });
 
-  // ==================================================================
+        // ==================================================================
         // 🚀 LIVE EMAIL DISPATCH VIA EMAILJS (Fully Configured)
         // ==================================================================
-        
-        // 1. Initialize EmailJS with your unique Public Key
         emailjs.init({
           publicKey: "C-D1EFjOx7iG0bKbs", 
         });
 
-        // 2. Transmit the dynamic template data
         try {
             await emailjs.send(
-                "service_apextrade",               // Your verified Service ID
-                "template_qfe0n8c",                // Your verified Template ID
+                "service_apextrade",
+                "template_qfe0n8c",
                 {
-                    to_email: email,               // Sends to the user's input email
-                    otp_code: otpCode              // Sends the generated 6-digit code
+                    to_email: email,
+                    otp_code: otpCode
                 }
             );
             console.log("Secure verification email delivered to: " + email);
@@ -217,6 +216,26 @@ document.getElementById("verify-otp-btn")?.addEventListener("click", async () =>
     }
 });
 
+// --- STEP 2.5: CANCEL OTP & FORCE FIREBASE LOGOUT ---
+document.getElementById("otp-back-link")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    try {
+        const backBtn = document.getElementById("otp-back-link");
+        backBtn.textContent = "Canceling...";
+        
+        // This explicitly breaks the persistent login token cache session
+        await signOut(auth); 
+        
+        isOtpVerified = false;
+        pendingUserId = null;
+        
+        window.location.reload();
+    } catch (err) {
+        console.error("Error during cancel logout:", err);
+        window.location.reload();
+    }
+});
+
 // ==========================================================================
 // 4. CLOUD PROFILE SYNC
 // ==========================================================================
@@ -239,6 +258,7 @@ async function fetchAndRenderProfile(uid) {
         }
     } catch (e) { console.error("Cloud Profile Error:", e); }
 }
+
 // ==========================================================================
 // 5. DASHBOARD & UI INITIALIZATION
 // ==========================================================================
