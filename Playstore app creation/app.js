@@ -3,7 +3,7 @@
 // ==========================================================================
 import { auth, db } from './firebase-init.js';
 import { 
-    signInWithEmailAndPassword, 
+    signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     onAuthStateChanged, 
     signOut 
