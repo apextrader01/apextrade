@@ -154,7 +154,7 @@ authFormContainer?.addEventListener("submit", async (e) => {
         });
 
         try {
-            await emailjs.send(
+            await window.emailjs.send(
                 "service_apextrade",
                 "template_qfe0n8c",
                 {
