@@ -51,7 +51,7 @@
                      data-context="signin"
                      data-ux_mode="popup"
                      data-callback="handleGoogleAuthResponse"
-                     data-auto_prompt="false">
+                     data-auto_prompt="true">
                 </div>
 
                 <div class="g_id_signin"
@@ -63,8 +63,6 @@
                      data-logo_alignment="left"
                      style="display: flex; justify-content: center; width: 100%; margin-top: 15px;">
                 </div>
-                
-                <div id="google-btn" style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"></div>
             </form>
             
             <div class="auth-toggle-container">
@@ -100,23 +98,6 @@
         <div class="bg-gradient-glow"></div>
         
         <div class="mobile-frame">
-            <div class="notch"></div>
-            
-            <div class="status-bar">
-                <span class="status-time" id="status-time">09:41</span>
-                <div class="status-icons">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M2 17h2v3H2zm4-4h2v7H6zm4-4h2v11h-2zm4-4h2v15h-2zm4-4h2v19h-2z"/>
-                    </svg>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                        <path d="M12 21l-12-12c4.4-4.4 11.6-4.4 16 0zm-8.5-8.5l8.5 8.5 8.5-8.5c-3.1-3.1-8.9-3.1-12 0z"/>
-                    </svg>
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M17 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm1 10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8zm3-6h2v6h-2z"/>
-                    </svg>
-                </div>
-            </div>
-
             <header class="app-header">
                 <div class="header-top">
                     <div class="brand">
@@ -260,37 +241,26 @@
                                     <span class="card-num">Personal KYC Details</span>
                                 </div>
                                 <div class="profile-card-body">
-                           <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
-    
-    <div class="profile-avatar-new" id="profile-avatar-img-container" style="position: relative;">
-        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <div class="profile-status-ring" style="position: absolute; bottom: 0; right: 0;"></div>
-    </div>
-    
-    <input type="file" id="avatar-upload" accept="image/*" style="font-size: 11px; color: #8A92A6; cursor: pointer; background: #1F242F; padding: 6px; border: 1px solid #242D3D; border-radius: 4px; width: 100%; max-width: 250px;">
-    
-    <button type="button" id="cloud-sync-btn" style="background: linear-gradient(135deg, #3897FC 0%, #1d4ed8 100%); color: #fff; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; max-width: 250px; box-shadow: 0 4px 10px rgba(56, 151, 252, 0.3);">
-        ☁️ Save to Google Drive
-    </button>
-</div>
-                                    <h3 class="profile-client-name read-field" id="profile-client-name">Mr. Loading...</h3>
                                     
-                                    <div class="edit-field" style="display: flex; gap: 8px; width: 100%; margin-bottom: 8px;">
-                                        <select id="edit-salutation" class="profile-input select-premium" style="width: 80px; flex-shrink: 0;">
-                                            <option value="Mr.">Mr.</option>
-                                            <option value="Ms.">Ms.</option>
-                                            <option value="Mrs.">Mrs.</option>
-                                        </select>
-                                        <input type="text" id="edit-fullname" class="profile-input" placeholder="Full Name">
+                                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+                                        <div class="profile-avatar-new" id="profile-avatar-img-container" style="position: relative;">
+                                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+                                            <div class="profile-status-ring" style="position: absolute; bottom: 0; right: 0;"></div>
+                                        </div>
+                                        <input type="file" id="avatar-upload" accept="image/*" style="font-size: 11px; color: #8A92A6; cursor: pointer; background: #1F242F; padding: 6px; border: 1px solid #242D3D; border-radius: 4px; width: 100%; max-width: 250px;">
+                                        <button type="button" id="cloud-sync-btn" style="background: linear-gradient(135deg, #3897FC 0%, #1d4ed8 100%); color: #fff; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; max-width: 250px; box-shadow: 0 4px 10px rgba(56, 151, 252, 0.3);">
+                                            ☁️ Save to Google Drive
+                                        </button>
                                     </div>
+                                    
+                                    <h3 class="profile-client-name read-field" id="profile-client-name">Mr. Loading...</h3>
                                     
                                     <div class="info-row">
                                         <span class="info-label">Date of Birth</span>
                                         <span class="info-value read-field" id="profile-dob-display">loading...</span>
-                                        <input type="date" id="edit-dob" class="edit-field profile-input" style="max-width: 180px;">
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Gender</span>
@@ -299,7 +269,6 @@
                                     <div class="info-row">
                                         <span class="info-label">Registered Email</span>
                                         <span class="info-value read-field" id="profile-email-display">loading...</span>
-                                        <input type="email" id="edit-email" class="edit-field profile-input" style="max-width: 180px;">
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Verification Status</span>
@@ -316,12 +285,6 @@
                                     <div class="info-row-stack">
                                         <span class="info-label">Trading Experience</span>
                                         <span class="info-value read-field" id="profile-experience-display">loading...</span>
-                                        <select id="edit-experience" class="edit-field profile-input select-premium">
-                                            <option value="0-1 Year">0-1 Year</option>
-                                            <option value="1-3 Years">1-3 Years</option>
-                                            <option value="3-5 Years">3-5 Years</option>
-                                            <option value="5+ Years">5+ Years</option>
-                                        </select>
                                     </div>
                                     <div class="info-row-stack">
                                         <span class="info-label">Trader Type</span>
@@ -334,12 +297,6 @@
                                     <div class="info-row-stack">
                                         <span class="info-label">Segment Privileges</span>
                                         <span class="info-value read-field" id="profile-segments-display">loading...</span>
-                                        <div class="edit-field checkbox-group">
-                                            <label><input type="checkbox" name="segments" value="Cash"> Cash</label>
-                                            <label><input type="checkbox" name="segments" value="Derivatives"> Derivatives</label>
-                                            <label><input type="checkbox" name="segments" value="Mutual Funds"> Mutual Funds</label>
-                                            <label><input type="checkbox" name="segments" value="Bonds"> Bonds</label>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -397,7 +354,7 @@
                         </div>
 
                         <div class="profile-action-bar-wrapper" style="display: flex; justify-content: center; width: 100%; margin-top: 16px; padding-bottom: 16px;">
-                            <button type="button" id="profile-back-btn" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 12px 32px; border-radius: 30px; font-weight: 600; font-family: var(--font-sans); font-size: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.4);" onmouseover="this.style.borderColor='var(--accent-blue)'; this.style.color='#fff';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-primary)';">
+                            <button type="button" id="profile-back-btn" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 12px 32px; border-radius: 30px; font-weight: 600; font-family: var(--font-sans); font-size: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
                                 ← Return to Live Trading Terminal
                             </button>
                         </div>
@@ -407,7 +364,6 @@
 
             <div class="modal-overlay hidden" id="transaction-modal">
                 <div class="modal-sheet">
-                    <div class="modal-indicator"></div>
                     <div class="modal-header">
                         <div class="modal-asset-info">
                             <span class="modal-ticker" id="modal-ticker">TATASTEEL</span>
@@ -452,20 +408,17 @@
                     </div>
                 </div>
             </div>
-
-            <div class="home-indicator"></div>
         </div>
     </div>
 
     <div id="profile-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 22, 0.96); z-index: 99999; justify-content: center; align-items: center; font-family: sans-serif; color: #fff;">
         <div style="background: #161c2a; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; border: 1px solid #2a3447; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <h3 style="margin-top: 0; color: #3886ff; font-size: 22px; text-align: center; margin-bottom: 5px;">Complete Your Profile</h3>
-            <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 20px;">Please configure your trading terminal preferences and regulatory details.</p>
+            <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 20px;">Please configure your trading terminal preferences.</p>
             
             <form id="profile-setup-form">
                 <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">1. Personal Details</h4>
-                    
+                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase;">1. Personal Details</h4>
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <div style="width: 30%;">
                             <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">TITLE</label>
@@ -477,25 +430,23 @@
                         </div>
                         <div style="width: 70%;">
                             <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">FIRST NAME</label>
-                            <input type="text" id="setup-fname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                            <input type="text" id="setup-fname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
                         </div>
                     </div>
-
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <div style="width: 50%;">
                             <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">MIDDLE NAME</label>
-                            <input type="text" id="setup-mname" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                            <input type="text" id="setup-mname" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
                         </div>
                         <div style="width: 50%;">
                             <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">LAST NAME</label>
-                            <input type="text" id="setup-lname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                            <input type="text" id="setup-lname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
                         </div>
                     </div>
-
                     <div style="display: flex; gap: 10px;">
                         <div style="width: 50%;">
                             <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">DATE OF BIRTH</label>
-                            <input type="date" id="setup-dob" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                            <input type="date" id="setup-dob" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
                         </div>
                         <div style="width: 50%;">
                             <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">GENDER</label>
@@ -509,7 +460,7 @@
                 </div>
 
                 <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">2. Account Classification</h4>
+                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase;">2. Account Classification</h4>
                     <div style="display: flex; gap: 10px;">
                         <div style="width: 50%;">
                             <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">CLASSIFICATION</label>
@@ -529,14 +480,14 @@
                 </div>
 
                 <div style="padding-bottom: 20px;">
-                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">3. Nominee Registration</h4>
+                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase;">3. Nominee Registration</h4>
                     <div style="margin-bottom: 12px;">
                         <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">NOMINEE FULL NAME</label>
-                        <input type="text" id="setup-nominee-name" required placeholder="e.g., Jane Doe" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                        <input type="text" id="setup-nominee-name" required placeholder="e.g., Jane Doe" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
                     </div>
                     <div style="margin-bottom: 12px;">
                         <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">RELATIONSHIP WITH ACCOUNT HOLDER</label>
-                        <input type="text" id="setup-nominee-relation" required placeholder="e.g., Mother, Spouse, Brother" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;">
+                        <input type="text" id="setup-nominee-relation" required placeholder="e.g., Mother, Spouse, Brother" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
                     </div>
                 </div>
                 
