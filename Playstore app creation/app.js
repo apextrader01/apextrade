@@ -190,7 +190,8 @@ document.getElementById("verify-otp-btn")?.addEventListener("click", async () =>
         btn.textContent = "VERIFYING...";
         const docSnap = await getDoc(doc(db, "users", pendingUserId));
         
-        if (docSnap.exists() && docSnap.data().currentOtp === userEnteredOtp) {
+        // This is the fix: String() ensures we compare text to text
+        if (docSnap.exists() && String(docSnap.data().currentOtp) === String(userEnteredOtp)) {
             isOtpVerified = true;
             // Erase OTP from DB for security
             await setDoc(doc(db, "users", pendingUserId), { currentOtp: null }, { merge: true });
