@@ -842,48 +842,55 @@ async function getOrCreateDriveFolder(accessToken) {
     const folderMetadata = { name: 'ApexTrade_Terminal_Assets', mimeType: 'application/vnd.google-apps.folder' };
     const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(folderMetadata)
-    });
-    const folderData = await createResponse.json();
-    return folderData.id;
-}
-
-function sendFileStreamToGoogleDrive(file, folderId, accessToken) {
+       
     return new Promise((resolve, reject) => {
-        const boundary = 'apex_terminal_cloud_boundary';
-        const delimiter = "\r\n--" + boundary + "\r\n";
-        const close_delimiter = "\r\n--" + boundary + "--";
-        const metadata = { 'name': `avatar_${Date.now()}.jpg`, 'mimeType': file.type || 'image/jpeg', 'parents': [folderId] };
+  
+     // ==========================================================================
+// ☁️ SECURE ADMIN CLOUD STORAGE SYSTEM (APPS SCRIPT BRIDGE)
+// ==========================================================================
 
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file);
-        reader.onload = function() {
-            const base64Data = btoa(new Uint8Array(reader.result).reduce((data, byte) => data + String.fromCharCode(byte), ''));
-            const multipartRequestBody = delimiter + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + delimiter + `Content-Type: ${file.type || 'image/jpeg'}\r\n` + 'Content-Transfer-Encoding: base64\r\n\r\n' + base64Data + close_delimiter;
+// 🟢 PASTE YOUR WEB APP URL (ENDS IN /exec) BETWEEN THE QUOTES:
+const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKWfkH0yGcH-wf0IE7NByB_ZqqbZPaalaQMuNuGVClzYeBpIeCvrbYTGjq6s5amugh/exec";
 
-            fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'multipart/related; boundary=' + boundary },
-                body: multipartRequestBody
-            })
-            .then(res => res.json())
-            .then(fileMetadata => {
-                if (fileMetadata.id) {
-                    const localReader = new FileReader();
-                    localReader.onload = function(evt) {
-                        localStorage.setItem("user_avatar", evt.target.result);
-                        if (document.getElementById("profile-avatar-img-container")) {
-                            document.getElementById("profile-avatar-img-container").innerHTML = `<img src="${evt.target.result}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
-                        }
-                    };
-                    localReader.readAsDataURL(file);
-                    alert("Profile photo synchronized permanently to your Google Server 15GB storage cloud!");
-                    resolve(fileMetadata);
-                } else { reject(fileMetadata); }
-            }).catch(err => reject(err));
+async function handleCloudAvatarUpload(file) {
+    const cloudBtn = document.getElementById("cloud-sync-btn");
+    if(cloudBtn) cloudBtn.textContent = "⏳ Uploading securely...";
+
+    const creds = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials'));
+    const customerId = creds ? creds.clientId : "Unknown_Customer";
+
+    const reader = new FileReader();
+    reader.onload = async function() {
+        const base64String = reader.result.split(',')[1];
+        const payload = {
+            filename: `${customerId}_profile_photo.jpg`,
+            mimeType: file.type || 'image/jpeg',
+            base64: base64String
         };
-    });
+
+        try {
+            const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                localStorage.setItem("user_avatar", reader.result);
+                if (document.getElementById("profile-avatar-img-container")) {
+                    document.getElementById("profile-avatar-img-container").innerHTML = `<img src="${reader.result}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
+                }
+                alert("Profile photo securely saved to the admin database!");
+            } else {
+                alert("Upload failed.");
+            }
+        } catch (error) {
+            console.error("Transmission Error:", error);
+        } finally {
+            if(cloudBtn) cloudBtn.textContent = "☁️ Save to Google Drive";
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 // Global UI Initialization
