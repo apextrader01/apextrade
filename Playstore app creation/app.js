@@ -144,14 +144,33 @@ authFormContainer?.addEventListener("submit", async (e) => {
             otpTimestamp: new Date().toISOString()
         }, { merge: true });
 
-        // SIMULATED EMAIL DELIVERY (Check F12 Console)
-        console.log("%c====================================", "color: #00ff88; font-size: 14px;");
-        console.log(`%c🔒 SECURITY ALERT: NEW LOGIN ATTEMPT`, "color: #ffaa00; font-weight: bold; font-size: 14px;");
-        console.log(`%c📧 Email Destination: ${email}`, "color: #fff; font-size: 14px;");
-        console.log(`%c🔑 YOUR 6-DIGIT OTP IS: ${otpCode}`, "color: #00ff88; font-weight: bold; font-size: 18px;");
-        console.log("%c====================================", "color: #00ff88; font-size: 14px;");
+  // ==================================================================
+        // 🚀 LIVE EMAIL DISPATCH VIA EMAILJS (Fully Configured)
+        // ==================================================================
+        
+        // 1. Initialize EmailJS with your unique Public Key
+        emailjs.init({
+          publicKey: "C-D1EFjOx7iG0bKbs", 
+        });
 
-        // Force UI update
+        // 2. Transmit the dynamic template data
+        try {
+            await emailjs.send(
+                "service_apextrade",               // Your verified Service ID
+                "template_qfe0n8c",                // Your verified Template ID
+                {
+                    to_email: email,               // Sends to the user's input email
+                    otp_code: otpCode              // Sends the generated 6-digit code
+                }
+            );
+            console.log("Secure verification email delivered to: " + email);
+        } catch (emailError) {
+            console.error("EmailJS Transmission Failure:", emailError);
+            alert("Security System Alert: Dynamic email dispatch failed.");
+        }
+        // ==================================================================
+
+        // Force UI update to transition to the OTP input view
         onAuthStateChanged(auth, () => {});
 
     } catch (err) { 
@@ -220,7 +239,6 @@ async function fetchAndRenderProfile(uid) {
         }
     } catch (e) { console.error("Cloud Profile Error:", e); }
 }
-
 // ==========================================================================
 // 5. DASHBOARD & UI INITIALIZATION
 // ==========================================================================
