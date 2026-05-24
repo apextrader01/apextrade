@@ -38,7 +38,7 @@ let activeSearchQuery = "";
 let selectedAsset = null;
 let currentTransactionType = "BUY";
 let authMode = "LOGIN";
-let isDashboardInitialized = false; // Prevents double-binding of events
+let isDashboardInitialized = false;
 
 // ==========================================================================
 // 3. FIREBASE AUTHENTICATION (THE GATEKEEPER)
@@ -49,8 +49,8 @@ const desktopWrapper = document.querySelector(".desktop-wrapper");
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // User is logged in: Show Terminal
-        authContainer.classList.add("hidden");
-        desktopWrapper.classList.remove("hidden");
+        authContainer?.classList.add("hidden");
+        desktopWrapper?.classList.remove("hidden");
         
         if (!isDashboardInitialized) {
             initializeDashboard();
@@ -58,8 +58,8 @@ onAuthStateChanged(auth, (user) => {
         }
     } else {
         // User is logged out: Show Login Screen
-        desktopWrapper.classList.add("hidden");
-        authContainer.classList.remove("hidden");
+        desktopWrapper?.classList.add("hidden");
+        authContainer?.classList.remove("hidden");
     }
 });
 
@@ -78,12 +78,12 @@ authToggleLink?.addEventListener("click", (e) => {
     authMode = authMode === "LOGIN" ? "SIGNUP" : "LOGIN";
     
     const isLogin = authMode === "LOGIN";
-    authTitle.textContent = isLogin ? "Log In to ApexTrade" : "Create your Account";
-    authSubmitBtn.textContent = isLogin ? "LOG IN" : "SIGN UP";
-    authToggleLink.textContent = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In";
+    if(authTitle) authTitle.textContent = isLogin ? "Log In to ApexTrade" : "Create your Account";
+    if(authSubmitBtn) authSubmitBtn.textContent = isLogin ? "LOG IN" : "SIGN UP";
+    if(authToggleLink) authToggleLink.textContent = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In";
     
     document.querySelectorAll(".signup-only").forEach(el => el.classList.toggle("hidden", isLogin));
-    authErrorMsg.classList.add("hidden");
+    authErrorMsg?.classList.add("hidden");
 });
 
 // Handle Form Submission with Firebase
@@ -101,8 +101,12 @@ authForm?.addEventListener("submit", async (e) => {
             await signInWithEmailAndPassword(auth, email, password);
         }
     } catch (error) {
-        authErrorMsg.textContent = "Error: " + error.message;
-        authErrorMsg.classList.remove("hidden");
+        if(authErrorMsg) {
+            authErrorMsg.textContent = "Error: " + error.message;
+            authErrorMsg.classList.remove("hidden");
+        } else {
+            alert("Error: " + error.message);
+        }
     }
 });
 
@@ -176,6 +180,16 @@ function initializeDashboard() {
 
     setupTabs();
     updateUI();
+    fetchNews();
+}
+
+async function fetchNews() {
+    try {
+        const newsSnapshot = await getDocs(collection(db, "news"));
+        newsSnapshot.forEach((doc) => console.log("News Item:", doc.data().headline));
+    } catch (e) {
+        console.log("No news found or firestore not setup yet.");
+    }
 }
 
 // ==========================================================================
@@ -213,7 +227,7 @@ function handleSearch(event) {
     }
 
     if(searchDropdownList) searchDropdownList.innerHTML = "";
-    results.forEach(item => renderInstrumentRow(item, searchDropdownList, true));
+    results.forEach(item => renderInstrumentRow(item, searchDropdownList));
     searchDropdown?.classList.remove("hidden");
 }
 
