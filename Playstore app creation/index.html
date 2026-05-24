@@ -4,12 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ApexTrade | Premium Portfolio Tracker</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <div id="auth-container" class="auth-overlay">
+        <div class="auth-card">
+            <h2 id="auth-title">Log In to ApexTrade</h2>
+            <form id="auth-form" autocomplete="off">
+                <div class="auth-input-group">
+                    <label for="auth-username">Email or Username</label>
+                    <input type="text" id="auth-username" placeholder="e.g. trader101" required>
+                </div>
+                <div class="auth-input-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" required>
+                </div>
+                <div class="auth-input-group signup-only hidden">
+                    <label for="auth-fullname">Full Name</label>
+                    <input type="text" id="auth-fullname">
+                </div>
+                <button type="submit" id="auth-submit-btn">LOG IN</button>
+            </form>
+            <a href="#" id="auth-toggle-link">Don't have an account? Sign Up</a>
+        </div>
+    </div>
+
+    <div class="desktop-wrapper hidden">
+        <header class="app-header">
+            <h1>ApexTrade</h1>
+            <button id="logout-btn">Log Out</button>
+        </header>
+        <main class="app-body">
+            </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
 
     <!-- ================================================================
          AUTH OVERLAY
