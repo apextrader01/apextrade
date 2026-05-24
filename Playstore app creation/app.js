@@ -153,7 +153,7 @@ authFormContainer?.addEventListener("submit", async (e) => {
                     "service_apextrade",
                     "template_qfe0n8c",
                     {
-                        to_email: email,
+                        email: email,
                         otp_code: otpCode
                     },
                     "C-D1EFjOx7iG0bKbs" // Adding the Public Key directly here is safer!
