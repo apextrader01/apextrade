@@ -260,16 +260,22 @@
                                     <span class="card-num">Personal KYC Details</span>
                                 </div>
                                 <div class="profile-card-body">
-                                <div class="profile-avatar-container" style="position: relative; display: inline-block; cursor: pointer; margin-bottom: 4px;" title="Click to Upload Profile Picture">
-    <div class="profile-avatar-new" id="profile-avatar-img-container">
+                           <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+    
+    <div class="profile-avatar-new" id="profile-avatar-img-container" style="position: relative;">
         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
         </svg>
+        <div class="profile-status-ring" style="position: absolute; bottom: 0; right: 0;"></div>
     </div>
-    <div class="profile-status-ring"></div>
-    <input type="file" id="avatar-upload" accept="image/*" style="opacity: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 20;">
-</div>                    
+    
+    <input type="file" id="avatar-upload" accept="image/*" style="font-size: 11px; color: #8A92A6; cursor: pointer; background: #1F242F; padding: 6px; border: 1px solid #242D3D; border-radius: 4px; width: 100%; max-width: 250px;">
+    
+    <button type="button" id="cloud-sync-btn" style="background: linear-gradient(135deg, #3897FC 0%, #1d4ed8 100%); color: #fff; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; max-width: 250px; box-shadow: 0 4px 10px rgba(56, 151, 252, 0.3);">
+        ☁️ Save to Google Drive
+    </button>
+</div>
                                     <h3 class="profile-client-name read-field" id="profile-client-name">Mr. Loading...</h3>
                                     
                                     <div class="edit-field" style="display: flex; gap: 8px; width: 100%; margin-bottom: 8px;">
