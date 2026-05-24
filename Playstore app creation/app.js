@@ -1,63 +1,89 @@
 // ==========================================================================
-// 1. IMPORTS (Must be at the very top)
+// 1. IMPORTS
 // ==========================================================================
 import { auth, db } from './firebase-init.js';
-import { onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // ==========================================================================
-// 2. ROUTE GUARD (The Watchman)
+// 2. STATE & DATABASE
+// ==========================================================================
+const INSTRUMENTS_DB = [
+    { symbol: "TATASTEEL", name: "Tata Steel Ltd.", price: 205.20, change: -1.62 },
+    { symbol: "ADANIPOWER", name: "Adani Power India Ltd.", price: 219.32, change: 0.77 },
+    { symbol: "ADANIENSOL", name: "Adani Energy Solutions Ltd.", price: 1367.90, change: -0.36 },
+    { symbol: "WIPRO", name: "Wipro Ltd.", price: 202.97, change: 0.15 },
+    { symbol: "GAIL", name: "GAIL India Ltd.", price: 160.77, change: 1.12 },
+    { symbol: "KITEX", name: "Kitex Garments Ltd.", price: 157.86, change: 0.45 },
+    { symbol: "APOLLOMICR", name: "Apollo Micro Systems Ltd.", price: 355.05, change: -0.85 },
+];
+
+INSTRUMENTS_DB.forEach(item => item.prevClose = item.price / (1 + item.change / 100));
+
+// ==========================================================================
+// 3. FIREBASE AUTHENTICATION (The Watchman)
 // ==========================================================================
 onAuthStateChanged(auth, (user) => {
+    const authContainer = document.getElementById("auth-container");
+    const desktopWrapper = document.querySelector(".desktop-wrapper");
+
     if (!user) {
-        // No user logged in: Hide the shell
-        const style = document.createElement('style');
-        style.id = 'temp-auth-hide';
-        style.textContent = '.desktop-wrapper { display: none !important; }';
-        document.head.appendChild(style);
-        console.log("Auth: Access denied, redirecting...");
+        // Not logged in: Show Login UI
+        desktopWrapper?.classList.add("hidden");
+        authContainer?.classList.remove("hidden");
     } else {
-        // User is logged in: Ensure content is visible
-        const existingStyle = document.getElementById('temp-auth-hide');
-        if (existingStyle) {
-            existingStyle.remove();
-        }
-        console.log("Auth: Access granted for user:", user.email);
+        // Logged in: Show Dashboard
+        authContainer?.classList.add("hidden");
+        desktopWrapper?.classList.remove("hidden");
+        initializeDashboard(); // Initialize UI only when authenticated
     }
 });
 
 // ==========================================================================
-// 3. LOGIN HANDLER
+// 4. LOGIN & LOGOUT HANDLERS
 // ==========================================================================
-const authForm = document.getElementById('auth-form');
-
-authForm.addEventListener('submit', async (e) => {
+const authForm = document.getElementById("auth-form");
+authForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    
-    const email = document.getElementById('auth-username').value;
-    const password = document.getElementById('auth-password').value;
+    const email = document.getElementById("auth-username").value;
+    const password = document.getElementById("auth-password").value;
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
         console.log("Login successful!");
     } catch (error) {
-        console.error("Login failed:", error.message);
         alert("Login failed: " + error.message);
     }
 });
 
+const logoutBtn = document.getElementById("logout-btn");
+logoutBtn?.addEventListener("click", () => signOut(auth));
+
 // ==========================================================================
-// 4. DATABASE & STATE
+// 5. DASHBOARD INITIALIZATION
 // ==========================================================================
-const INSTRUMENTS_DB = [
-    { symbol: "TATASTEEL",   name: "Tata Steel Ltd.",              price: 205.20,  change: -1.62 },
-    { symbol: "ADANIPOWER",  name: "Adani Power India Ltd.",       price: 219.32,  change:  0.77 },
-    { symbol: "ADANIENSOL",  name: "Adani Energy Solutions Ltd.",  price: 1367.90, change: -0.36 },
-    { symbol: "WIPRO",       name: "Wipro Ltd.",                   price: 202.97,  change:  0.15 },
-    { symbol: "GAIL",        name: "GAIL India Ltd.",              price: 160.77,  change:  1.12 },
-    { symbol: "KITEX",       name: "Kitex Garments Ltd.",          price: 157.86,  change:  0.45 },
-    { symbol: "APOLLOMICR",  name: "Apollo Micro Systems Ltd.",    price: 355.05,  change: -0.85 },
-];
+function initializeDashboard() {
+    console.log("Dashboard Initialized.");
+    
+    // Move all your existing UI bindings (search, tabs, etc.) here.
+    // This function only runs if the user is successfully logged in.
+    
+    setupTabs();
+    updateUI();
+    
+    // Example: fetch your news from Firestore
+    fetchNews();
+}
+
+async function fetchNews() {
+    const newsSnapshot = await getDocs(collection(db, "news"));
+    newsSnapshot.forEach((doc) => {
+        console.log("News Item:", doc.data().headline);
+    });
+}
+
+function updateUI() { /* ... your existing render logic ... */ }
+function setupTabs() { /* ... your existing tab logic ... */ }
 
 // Derive prevClose
 INSTRUMENTS_DB.forEach(item => {
