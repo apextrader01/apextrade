@@ -1,3 +1,19 @@
+// Ensure this is imported at the top of app.js
+import { createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
+// Inside your Signup event listener:
+try {
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // THIS IS THE TRIGGER
+    await sendEmailVerification(userCred.user);
+    
+    alert("Verification email sent! Please check your inbox (and spam folder).");
+} catch (err) {
+    console.error("Registration error:", err);
+    alert(err.message);
+}
+
 // 1. SAVE PROFILE TO CLOUD (Call this after a successful upload or profile edit)
 async function saveUserProfileToCloud(uid, data) {
     try {
