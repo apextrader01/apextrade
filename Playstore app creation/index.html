@@ -21,8 +21,8 @@
 
             <form id="auth-form" autocomplete="off">
                 <div class="auth-input-group">
-                    <label for="auth-username">Email or Username</label>
-                    <input type="text" id="auth-username" placeholder="e.g. trader101" required>
+                    <label for="auth-username">Email Address</label>
+                    <input type="email" id="auth-username" placeholder="e.g. trader@example.com" required>
                 </div>
 
                 <div class="auth-input-group">
@@ -41,39 +41,33 @@
                 </div>
 
                 <div class="auth-error-msg hidden" id="auth-error-msg">
-                    Invalid username or password.
+                    Invalid credentials. Please try again.
                 </div>
 
                 <div style="display:flex; align-items:center; width:100%; margin-top:15px; margin-bottom:15px;">
                     <button type="submit" class="auth-submit-btn" id="auth-submit-btn" style="flex:1;">LOG IN</button>
-                    <a href="#" id="forgot-password-link" class="login-only" style="color:#8A92A6; font-size:12px; text-decoration:none; margin-left:10px;">Forgot Password?</a>
+                </div>
+
+                <div class="auth-toggle-container">
+                    <span id="auth-toggle-text">Don't have an account?</span>
+                    <a href="#" id="auth-toggle-link">Sign Up</a>
                 </div>
             </form>
 
-            <div class="auth-toggle-container">
-                <span id="auth-toggle-text">Don't have an account?</span>
-                <a href="#" id="auth-toggle-link">Sign Up</a>
-            </div>
-
-            <div id="otp-container" class="otp-container hidden">
-                <h2 class="auth-title" style="margin-bottom:4px; font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--text-primary); text-align:center;">Verify OTP</h2>
-                <p class="auth-subtitle" style="margin-bottom:20px; font-size:12px; color:var(--text-secondary); text-align:center; line-height:1.5;">We have sent a 4-digit verification code to your registered email.</p>
-
-                <div class="otp-inputs" style="display:flex; gap:12px; justify-content:center; margin-bottom:20px; width:100%;">
-                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-1">
-                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-2">
-                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-3">
-                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-4">
+            <div id="otp-section" class="hidden" style="text-align: center; margin-top: 10px;">
+                <h3 style="color: var(--text-primary); margin-bottom: 5px; font-family: var(--font-display);">Two-Step Verification</h3>
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Enter the secure 6-digit code generated for your session.</p>
+                
+                <div class="auth-input-group">
+                    <input type="text" id="auth-otp" placeholder="••••••" style="text-align: center; letter-spacing: 8px; font-size: 22px; font-weight: bold;" maxlength="6" autocomplete="off">
                 </div>
-
-                <div class="auth-error-msg hidden" id="otp-error-msg" style="width:100%; margin-bottom:16px;">
-                    Invalid OTP. Please try again.
-                </div>
-
-                <button type="button" class="auth-submit-btn" id="otp-verify-btn">VERIFY OTP</button>
-
-                <div class="auth-toggle-container" style="margin-top:16px; text-align:center; font-size:12px;">
-                    <a href="#" id="otp-back-link">← Back to Sign Up</a>
+                
+                <button id="verify-otp-btn" class="auth-submit-btn" style="background: linear-gradient(135deg, #00C853 0%, #009624 100%); color: #fff; margin-top: 10px; border:none; box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);">
+                    VERIFY & ENTER TERMINAL
+                </button>
+                
+                <div class="auth-toggle-container" style="margin-top:20px; text-align:center; font-size:13px;">
+                    <a href="#" id="otp-back-link" onclick="window.location.reload()" style="color: var(--text-secondary);">← Cancel Login</a>
                 </div>
             </div>
         </div>
