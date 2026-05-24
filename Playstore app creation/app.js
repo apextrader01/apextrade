@@ -66,7 +66,7 @@ authFormContainer?.addEventListener("submit", async (e) => {
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
         await setDoc(doc(db, "users", pendingUserId), { currentOtp: otpCode }, { merge: true });
-        await window.emailjs.send("service_apextrade", "template_qfe0n8c", { email, otp_code: otpCode });
+        await window.emailjs.send("service_apextrade", "template_qfe0n8c", { email: email, otp_code: otpCode }, "C-D1EFjOx7iG0bKbs");
         
         authFormContainer.classList.add("hidden");
         otpSection.classList.remove("hidden");
