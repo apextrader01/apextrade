@@ -1,26 +1,13 @@
-// app.js - ApexTrade | Premium Stock Portfolio & Terminal Router
-// Architecture: Custom ID/Password Auth + Admin Bridge (Google Apps Script)
-
 // ==========================================================================
-// ROUTE GUARD — Runs immediately, before DOM is ready
-// Hides the dashboard shell during the auth check to prevent flash-of-content.
+// 1. IMPORTS (Must be at the very top)
 // ==========================================================================
-// app.js - ApexTrade | Premium Stock Portfolio & Terminal Router
-// Architecture: Custom ID/Password Auth + Admin Bridge (Google Apps Script)
-
-// [INSERT YOUR FIREBASE IMPORT HERE]
 import { auth, db } from './firebase-init.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-// ================================================================
-// ROUTE GUARD - Runs immediately, before DOM is ready
-// ================================================================
-
-
-      // ================================================================
-// ROUTE GUARD - Runs immediately using Firebase Auth
-// ================================================================
-
+// ==========================================================================
+// 2. ROUTE GUARD (The Watchman)
+// ==========================================================================
 onAuthStateChanged(auth, (user) => {
     if (!user) {
         // No user logged in: Hide the shell
@@ -40,20 +27,39 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ==========================================================================
-// DATABASE & STATE
+// 3. LOGIN HANDLER
 // ==========================================================================
+const authForm = document.getElementById('auth-form');
 
+authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('auth-username').value;
+    const password = document.getElementById('auth-password').value;
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        console.log("Login successful!");
+    } catch (error) {
+        console.error("Login failed:", error.message);
+        alert("Login failed: " + error.message);
+    }
+});
+
+// ==========================================================================
+// 4. DATABASE & STATE
+// ==========================================================================
 const INSTRUMENTS_DB = [
-    { symbol: "TATASTEEL",   name: "Tata Steel Ltd.",               price: 205.20,  change: -1.62 },
-    { symbol: "ADANIPOWER",  name: "Adani Power India Ltd.",         price: 219.32,  change:  0.77 },
-    { symbol: "ADANIENSOL", name: "Adani Energy Solutions Ltd.",    price: 1367.90, change: -0.36 },
-    { symbol: "WIPRO",       name: "Wipro Ltd.",                     price: 202.97,  change:  0.15 },
-    { symbol: "GAIL",        name: "GAIL India Ltd.",                price: 160.77,  change:  1.12 },
-    { symbol: "KITEX",       name: "Kitex Garments Ltd.",            price: 157.86,  change:  0.45 },
-    { symbol: "APOLLOMICR",  name: "Apollo Micro Systems Ltd.",      price: 355.05,  change: -0.85 },
+    { symbol: "TATASTEEL",   name: "Tata Steel Ltd.",              price: 205.20,  change: -1.62 },
+    { symbol: "ADANIPOWER",  name: "Adani Power India Ltd.",       price: 219.32,  change:  0.77 },
+    { symbol: "ADANIENSOL",  name: "Adani Energy Solutions Ltd.",  price: 1367.90, change: -0.36 },
+    { symbol: "WIPRO",       name: "Wipro Ltd.",                   price: 202.97,  change:  0.15 },
+    { symbol: "GAIL",        name: "GAIL India Ltd.",              price: 160.77,  change:  1.12 },
+    { symbol: "KITEX",       name: "Kitex Garments Ltd.",          price: 157.86,  change:  0.45 },
+    { symbol: "APOLLOMICR",  name: "Apollo Micro Systems Ltd.",    price: 355.05,  change: -0.85 },
 ];
 
-// Derive prevClose from price and change% so daily P&L calculations are accurate
+// Derive prevClose
 INSTRUMENTS_DB.forEach(item => {
     item.prevClose = item.price / (1 + item.change / 100);
 });
