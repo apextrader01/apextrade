@@ -6,7 +6,60 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https:/
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // ==========================================================================
-// 2. STATE & DATABASE
+// 2. FIREBASE AUTHENTICATION (THE GATEKEEPER)
+// ==========================================================================
+onAuthStateChanged(auth, (user) => {
+    const authContainer = document.getElementById("auth-container");
+    const desktopWrapper = document.querySelector(".desktop-wrapper");
+
+    if (!user) {
+        // Show Login UI
+        desktopWrapper?.classList.add("hidden");
+        authContainer?.classList.remove("hidden");
+    } else {
+        // Show Dashboard
+        authContainer?.classList.add("hidden");
+        desktopWrapper?.classList.remove("hidden");
+        initializeDashboard(); 
+    }
+});
+
+// ==========================================================================
+// 3. LOGIN HANDLER
+// ==========================================================================
+const authForm = document.getElementById("auth-form");
+authForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("auth-username").value;
+    const password = document.getElementById("auth-password").value;
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        alert("Login failed: " + error.message);
+    }
+});
+
+// ==========================================================================
+// 4. DASHBOARD INITIALIZATION
+// ==========================================================================
+function initializeDashboard() {
+    // This runs ONLY when authenticated
+    document.getElementById("logout-btn")?.addEventListener("click", () => signOut(auth));
+    
+    // Bind all your existing UI functions here
+    setupTabs();
+    updateUI();
+    fetchNews();
+}
+
+async function fetchNews() {
+    const newsSnapshot = await getDocs(collection(db, "news"));
+    newsSnapshot.forEach((doc) => console.log("News Item:", doc.data().headline));
+}
+
+// ==========================================================================
+// 5. DATA & UI (Your existing logic)
 // ==========================================================================
 const INSTRUMENTS_DB = [
     { symbol: "TATASTEEL", name: "Tata Steel Ltd.", price: 205.20, change: -1.62 },
@@ -20,61 +73,7 @@ const INSTRUMENTS_DB = [
 
 INSTRUMENTS_DB.forEach(item => item.prevClose = item.price / (1 + item.change / 100));
 
-// ==========================================================================
-// 3. FIREBASE AUTHENTICATION (The Watchman)
-// ==========================================================================
-onAuthStateChanged(auth, (user) => {
-    const authContainer = document.getElementById("auth-container");
-    const desktopWrapper = document.querySelector(".desktop-wrapper");
-
-    if (!user) {
-        // Not logged in: Show Login UI
-        desktopWrapper?.classList.add("hidden");
-        authContainer?.classList.remove("hidden");
-    } else {
-        // Logged in: Show Dashboard
-        authContainer?.classList.add("hidden");
-        desktopWrapper?.classList.remove("hidden");
-        initializeDashboard(); // Initialize UI only when authenticated
-    }
-});
-
-// ==========================================================================
-// 4. LOGIN & LOGOUT HANDLERS
-// ==========================================================================
-const authForm = document.getElementById("auth-form");
-authForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("auth-username").value;
-    const password = document.getElementById("auth-password").value;
-
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        console.log("Login successful!");
-    } catch (error) {
-        alert("Login failed: " + error.message);
-    }
-});
-
-const logoutBtn = document.getElementById("logout-btn");
-logoutBtn?.addEventListener("click", () => signOut(auth));
-
-// ==========================================================================
-// 5. DASHBOARD INITIALIZATION
-// ==========================================================================
-function initializeDashboard() {
-    console.log("Dashboard Initialized.");
-    
-    // Move all your existing UI bindings (search, tabs, etc.) here.
-    // This function only runs if the user is successfully logged in.
-    
-    setupTabs();
-    updateUI();
-    
-    // Example: fetch your news from Firestore
-    fetchNews();
-}
-
+// ... (Paste your existing setupTabs, updateUI, renderPortfolio, etc. functions below)
 async function fetchNews() {
     const newsSnapshot = await getDocs(collection(db, "news"));
     newsSnapshot.forEach((doc) => {
