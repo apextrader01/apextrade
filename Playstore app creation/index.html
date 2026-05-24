@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ApexTrade | Premium Portfolio Tracker</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- ================================================================
+         AUTH OVERLAY
+         Custom ID/Password login. No third-party OAuth.
+    ================================================================ -->
     <div id="auth-container" class="auth-overlay">
         <div class="auth-card">
             <div class="auth-logo">
@@ -18,105 +22,94 @@
             </div>
             <h2 id="auth-title">Log In to ApexTrade</h2>
             <p class="auth-subtitle" id="auth-subtitle">Enter your credentials to access your trading dashboard</p>
-            
+
             <form id="auth-form" autocomplete="off">
                 <div class="auth-input-group">
                     <label for="auth-username">Email or Username</label>
                     <input type="text" id="auth-username" placeholder="e.g. trader101" required>
                 </div>
+
                 <div class="auth-input-group signup-only hidden">
                     <label for="auth-fullname">Full Name</label>
                     <input type="text" id="auth-fullname" placeholder="e.g. Hari Krishnan I V">
                 </div>
+
                 <div class="auth-input-group signup-only hidden">
                     <label for="auth-dob">Date of Birth</label>
                     <input type="date" id="auth-dob">
                 </div>
+
                 <div class="auth-input-group">
                     <label for="auth-password">Password</label>
                     <input type="password" id="auth-password" placeholder="••••••••" required>
                 </div>
-                
+
                 <div class="auth-error-msg hidden" id="auth-error-msg">
                     Invalid username or password.
                 </div>
-                
-                <div style="display: flex; align-items: center; width: 100%; margin-bottom: 15px;">
-                    <button type="submit" class="auth-submit-btn" id="auth-submit-btn" style="flex: 1;">LOG IN</button>
-                    <a href="#" id="forgot-password-link" class="login-only" style="color: #8A92A6; font-size: 12px; text-decoration: none; margin-left: 10px;">Forgot Password?</a>
-                </div>
 
-                <div id="g_id_onload"
-                     data-client_id="338294665324-uo4kj0ffgsk0eucvlbihj6nvkfmdipo9.apps.googleusercontent.com"
-                     data-context="signin"
-                     data-ux_mode="popup"
-                     data-callback="handleGoogleAuthResponse"
-                     data-auto_prompt="true">
-                </div>
-
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-shape="rectangular"
-                     data-theme="outline"
-                     data-text="signin_with"
-                     data-size="large"
-                     data-logo_alignment="left"
-                     style="display: flex; justify-content: center; width: 100%; margin-top: 15px;">
+                <div style="display:flex; align-items:center; width:100%; margin-bottom:15px;">
+                    <button type="submit" class="auth-submit-btn" id="auth-submit-btn" style="flex:1;">LOG IN</button>
+                    <a href="#" id="forgot-password-link" class="login-only" style="color:#8A92A6; font-size:12px; text-decoration:none; margin-left:10px;">Forgot Password?</a>
                 </div>
             </form>
-            
+
             <div class="auth-toggle-container">
                 <span id="auth-toggle-text">Don't have an account?</span>
                 <a href="#" id="auth-toggle-link">Sign Up</a>
             </div>
 
+            <!-- OTP Verification Step (shown after successful sign-up form) -->
             <div id="otp-container" class="otp-container hidden">
-                <h2 class="auth-title" style="margin-bottom: 4px; font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-primary); text-align: center;">Verify OTP</h2>
-                <p class="auth-subtitle" style="margin-bottom: 20px; font-size: 12px; color: var(--text-secondary); text-align: center; line-height: 1.5;">We have sent a 4-digit verification code to your email.</p>
-                
-                <div class="otp-inputs" style="display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; width: 100%;">
+                <h2 class="auth-title" style="margin-bottom:4px; font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--text-primary); text-align:center;">Verify OTP</h2>
+                <p class="auth-subtitle" style="margin-bottom:20px; font-size:12px; color:var(--text-secondary); text-align:center; line-height:1.5;">We have sent a 4-digit verification code to your registered email.</p>
+
+                <div class="otp-inputs" style="display:flex; gap:12px; justify-content:center; margin-bottom:20px; width:100%;">
                     <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-1">
                     <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-2">
                     <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-3">
                     <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" id="otp-4">
                 </div>
-                
-                <div class="auth-error-msg hidden" id="otp-error-msg" style="width: 100%; margin-bottom: 16px;">
+
+                <div class="auth-error-msg hidden" id="otp-error-msg" style="width:100%; margin-bottom:16px;">
                     Invalid OTP. Please try again.
                 </div>
-                
+
                 <button type="button" class="auth-submit-btn" id="otp-verify-btn">VERIFY OTP</button>
-                
-                <div class="auth-toggle-container" style="margin-top: 16px; text-align: center; font-size: 12px;">
-                    <a href="#" id="otp-back-link">Back to Sign Up</a>
+
+                <div class="auth-toggle-container" style="margin-top:16px; text-align:center; font-size:12px;">
+                    <a href="#" id="otp-back-link">← Back to Sign Up</a>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ================================================================
+         MAIN DASHBOARD
+    ================================================================ -->
     <div class="desktop-wrapper">
         <div class="bg-gradient-glow"></div>
-        
+
         <div class="mobile-frame">
+
+            <!-- Header -->
             <header class="app-header">
                 <div class="header-top">
                     <div class="brand">
-                        <div class="brand-logo">
-                            <span>A</span>
-                        </div>
+                        <div class="brand-logo"><span>A</span></div>
                         <div class="brand-info">
                             <h1>ApexTrade</h1>
                             <span class="market-status"><span class="pulse-dot"></span>Live Market</span>
                         </div>
                     </div>
                     <div class="header-actions">
-                        <div class="profile-btn">
+                        <div class="profile-btn" role="button" aria-label="Open profile">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
                         </div>
-                        <button class="logout-btn" id="logout-btn" title="Log Out">
+                        <button class="logout-btn" id="logout-btn" title="Log Out" aria-label="Log out">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                 <polyline points="16 17 21 12 16 7"></polyline>
@@ -126,18 +119,20 @@
                     </div>
                 </div>
 
+                <!-- Portfolio Balance Card -->
                 <div class="portfolio-balance-card" id="balance-card">
                     <div class="balance-label">TOTAL PORTFOLIO VALUE</div>
                     <div class="balance-value-container">
                         <span class="currency-symbol">₹</span>
-                        <span class="balance-amount" id="portfolio-balance">1,45,230.50</span>
+                        <span class="balance-amount" id="portfolio-balance">0.00</span>
                     </div>
                     <div class="balance-change-row">
-                        <span class="change-badge" id="portfolio-change-badge">+₹1,240.20 (+0.86%)</span>
+                        <span class="change-badge" id="portfolio-change-badge">—</span>
                         <span class="timeframe-label">TODAY</span>
                     </div>
                 </div>
 
+                <!-- Search -->
                 <div class="search-container">
                     <div class="search-wrapper">
                         <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -152,12 +147,12 @@
                             </svg>
                         </button>
                     </div>
-
                     <div class="search-dropdown hidden" id="search-dropdown">
                         <div class="dropdown-list" id="search-dropdown-list"></div>
                     </div>
                 </div>
 
+                <!-- Tabs -->
                 <div class="tabs-container">
                     <button class="tab-btn active" data-tab="watchlist-tab">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
@@ -184,27 +179,31 @@
                 </div>
             </header>
 
+            <!-- Main Content -->
             <main class="app-body">
                 <div id="dashboard-main-view" class="dashboard-grid">
+
+                    <!-- Watchlist Tab -->
                     <section class="tab-panel active" id="watchlist-tab">
                         <div class="section-header">
                             <div class="section-title">My Watchlist</div>
                             <div class="section-actions">
-                                <span class="active-count" id="watchlist-count">7 items</span>
+                                <span class="active-count" id="watchlist-count">0 items</span>
                             </div>
                         </div>
                         <div class="watchlist-list" id="watchlist-list"></div>
                     </section>
 
+                    <!-- Portfolio Tab -->
                     <section class="tab-panel" id="portfolio-tab">
                         <div class="portfolio-stats-grid">
                             <div class="stat-card">
                                 <div class="stat-label">Invested</div>
-                                <div class="stat-value" id="portfolio-invested">₹1,32,400.00</div>
+                                <div class="stat-value" id="portfolio-invested">—</div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-label">Total P&L</div>
-                                <div class="stat-value pnl-positive" id="portfolio-pnl">₹12,830.50 (+9.69%)</div>
+                                <div class="stat-value" id="portfolio-pnl">—</div>
                             </div>
                         </div>
 
@@ -213,62 +212,65 @@
                         </div>
                         <div class="holdings-list" id="holdings-list"></div>
 
-                        <div class="section-header" style="margin-top: 1.5rem;">
+                        <div class="section-header" style="margin-top:1.5rem;">
                             <div class="section-title">Transaction History</div>
                         </div>
                         <div class="activity-log" id="activity-log-list"></div>
                     </section>
                 </div>
 
+                <!-- Profile Panel -->
                 <section class="profile-panel-overlay hidden" id="profile-panel">
                     <div class="profile-container-wrapper">
-                        <div class="profile-hub-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-                            <div style="text-align: left;">
+
+                        <div class="profile-hub-header" style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                            <div style="text-align:left;">
                                 <h2 class="profile-hub-title">REGULATED BROKER PROFILE</h2>
                                 <p class="profile-hub-subtitle">Client Information & Exchange Demat Account Parameters</p>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="display:flex; align-items:center; gap:15px;">
                                 <button type="button" id="back-to-dashboard-btn" class="btn-secondary">← Back to Terminal</button>
-                                <button type="button" id="profile-edit-btn" class="btn-execute-order btn-buy" style="height: 36px; padding: 0 16px; font-size: 12.5px; font-weight: 700; border-radius: var(--border-radius-sm); box-shadow: 0 2px 8px var(--green-glow);">
+                                <button type="button" id="profile-edit-btn" class="btn-execute-order btn-buy" style="height:36px; padding:0 16px; font-size:12.5px; font-weight:700; border-radius:var(--border-radius-sm); box-shadow:0 2px 8px var(--green-glow);">
                                     Edit Profile
                                 </button>
                             </div>
                         </div>
 
                         <div class="profile-grid">
+
+                            <!-- Card 1: KYC -->
                             <div class="profile-card-new">
                                 <div class="profile-card-header">
                                     <span class="card-num">Personal KYC Details</span>
                                 </div>
                                 <div class="profile-card-body">
-                                    
-                                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
-                                        <div class="profile-avatar-new" id="profile-avatar-img-container" style="position: relative;">
+                                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:12px; margin-bottom:16px;">
+                                        <div class="profile-avatar-new" id="profile-avatar-img-container" style="position:relative;">
                                             <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
                                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                                 <circle cx="12" cy="7" r="4"></circle>
                                             </svg>
-                                            <div class="profile-status-ring" style="position: absolute; bottom: 0; right: 0;"></div>
+                                            <div class="profile-status-ring" style="position:absolute; bottom:0; right:0;"></div>
                                         </div>
-                                        <input type="file" id="avatar-upload" accept="image/*" style="font-size: 11px; color: #8A92A6; cursor: pointer; background: #1F242F; padding: 6px; border: 1px solid #242D3D; border-radius: 4px; width: 100%; max-width: 250px;">
-                                        <button type="button" id="cloud-sync-btn" style="background: linear-gradient(135deg, #3897FC 0%, #1d4ed8 100%); color: #fff; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; max-width: 250px; box-shadow: 0 4px 10px rgba(56, 151, 252, 0.3);">
+                                        <input type="file" id="avatar-upload" accept="image/*" style="font-size:11px; color:#8A92A6; cursor:pointer; background:#1F242F; padding:6px; border:1px solid #242D3D; border-radius:4px; width:100%; max-width:250px;">
+                                        <button type="button" id="cloud-sync-btn" style="background:linear-gradient(135deg,#3897FC 0%,#1d4ed8 100%); color:#fff; border:none; padding:10px 12px; border-radius:6px; font-weight:bold; cursor:pointer; width:100%; max-width:250px; box-shadow:0 4px 10px rgba(56,151,252,0.3);">
                                             ☁️ Save to Google Drive
                                         </button>
                                     </div>
-                                    
-                                    <h3 class="profile-client-name read-field" id="profile-client-name">Mr. Loading...</h3>
-                                    
+
+                                    <h3 class="profile-client-name read-field" id="profile-client-name">—</h3>
+
                                     <div class="info-row">
                                         <span class="info-label">Date of Birth</span>
-                                        <span class="info-value read-field" id="profile-dob-display">loading...</span>
+                                        <span class="info-value read-field" id="profile-dob-display">—</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Gender</span>
-                                        <span class="info-value" id="profile-gender-display">Male</span>
+                                        <span class="info-value" id="profile-gender-display">—</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Registered Email</span>
-                                        <span class="info-value read-field" id="profile-email-display">loading...</span>
+                                        <span class="info-value read-field" id="profile-email-display">—</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Verification Status</span>
@@ -277,6 +279,7 @@
                                 </div>
                             </div>
 
+                            <!-- Card 2: Trading Profile -->
                             <div class="profile-card-new">
                                 <div class="profile-card-header">
                                     <span class="card-num">Trading Profile & Metrics</span>
@@ -284,31 +287,32 @@
                                 <div class="profile-card-body">
                                     <div class="info-row-stack">
                                         <span class="info-label">Trading Experience</span>
-                                        <span class="info-value read-field" id="profile-experience-display">loading...</span>
+                                        <span class="info-value read-field" id="profile-experience-display">—</span>
                                     </div>
                                     <div class="info-row-stack">
                                         <span class="info-label">Trader Type</span>
-                                        <span class="info-value">Active Intraday & Derivatives Trader</span>
+                                        <span class="info-value">Active Intraday &amp; Derivatives Trader</span>
                                     </div>
                                     <div class="info-row-stack">
                                         <span class="info-label">Core Strategy</span>
-                                        <span class="info-value">VWAP, RSI, & EMA Index Structure (Nifty / Bank Nifty)</span>
+                                        <span class="info-value">VWAP, RSI, &amp; EMA Index Structure (Nifty / Bank Nifty)</span>
                                     </div>
                                     <div class="info-row-stack">
                                         <span class="info-label">Segment Privileges</span>
-                                        <span class="info-value read-field" id="profile-segments-display">loading...</span>
+                                        <span class="info-value read-field" id="profile-segments-display">—</span>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Card 3: Account & Nominee -->
                             <div class="profile-card-new">
                                 <div class="profile-card-header">
-                                    <span class="card-num">Account & Nominee Configurations</span>
+                                    <span class="card-num">Account &amp; Nominee Configurations</span>
                                 </div>
                                 <div class="profile-card-body">
                                     <div class="info-row">
                                         <span class="info-label">Client ID</span>
-                                        <span class="info-value text-highlight" id="profile-client-id">loading...</span>
+                                        <span class="info-value text-highlight" id="profile-client-id">—</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label">Margin Setup</span>
@@ -316,11 +320,12 @@
                                     </div>
                                     <div class="info-row-stack">
                                         <span class="info-label">Nominee Status</span>
-                                        <span class="info-value" style="color: var(--green-vivid); font-weight: 700;">✓ Nominee Registered & Opted In (100% Share Assigned)</span>
+                                        <span class="info-value" style="color:var(--green-vivid); font-weight:700;">✓ Nominee Registered &amp; Opted In (100% Share Assigned)</span>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Card 4: Support Gateway -->
                             <div class="profile-card-new">
                                 <div class="profile-card-header">
                                     <span class="card-num">Customer Support Gateway</span>
@@ -346,15 +351,15 @@
                                         <span class="info-label">Current Support Status</span>
                                         <span class="info-value">Live Token Gateway Active</span>
                                     </div>
-                                    <button type="button" class="btn-execute-order btn-buy" style="margin-top: 16px; width: 100%;" onclick="alert('Support ticket system initialized. Assigned ticket ID: #' + Math.floor(Math.random() * 900000 + 100000))">
+                                    <button type="button" class="btn-execute-order btn-buy" id="support-ticket-btn" style="margin-top:16px; width:100%;">
                                         Contact Helpdesk / Create Ticket
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="profile-action-bar-wrapper" style="display: flex; justify-content: center; width: 100%; margin-top: 16px; padding-bottom: 16px;">
-                            <button type="button" id="profile-back-btn" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 12px 32px; border-radius: 30px; font-weight: 600; font-family: var(--font-sans); font-size: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+                        <div class="profile-action-bar-wrapper" style="display:flex; justify-content:center; width:100%; margin-top:16px; padding-bottom:16px;">
+                            <button type="button" id="profile-back-btn" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary); padding:12px 32px; border-radius:30px; font-weight:600; font-family:var(--font-sans); font-size:14px; cursor:pointer; transition:all 0.2s ease; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
                                 ← Return to Live Trading Terminal
                             </button>
                         </div>
@@ -362,14 +367,15 @@
                 </section>
             </main>
 
+            <!-- Transaction Modal -->
             <div class="modal-overlay hidden" id="transaction-modal">
                 <div class="modal-sheet">
                     <div class="modal-header">
                         <div class="modal-asset-info">
-                            <span class="modal-ticker" id="modal-ticker">TATASTEEL</span>
-                            <span class="modal-name" id="modal-name">Tata Steel Ltd.</span>
+                            <span class="modal-ticker" id="modal-ticker">—</span>
+                            <span class="modal-name" id="modal-name">—</span>
                         </div>
-                        <button class="modal-close" id="modal-close-btn">&times;</button>
+                        <button class="modal-close" id="modal-close-btn" aria-label="Close">&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="modal-price-row">
@@ -387,9 +393,9 @@
                         <div class="input-group">
                             <label for="transaction-qty">Quantity</label>
                             <div class="qty-control">
-                                <button type="button" class="qty-btn" id="qty-minus">-</button>
+                                <button type="button" class="qty-btn" id="qty-minus" aria-label="Decrease quantity">−</button>
                                 <input type="number" id="transaction-qty" min="1" value="10">
-                                <button type="button" class="qty-btn" id="qty-plus">+</button>
+                                <button type="button" class="qty-btn" id="qty-plus" aria-label="Increase quantity">+</button>
                             </div>
                         </div>
 
@@ -408,95 +414,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div id="profile-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 22, 0.96); z-index: 99999; justify-content: center; align-items: center; font-family: sans-serif; color: #fff;">
-        <div style="background: #161c2a; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; border: 1px solid #2a3447; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <h3 style="margin-top: 0; color: #3886ff; font-size: 22px; text-align: center; margin-bottom: 5px;">Complete Your Profile</h3>
-            <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 20px;">Please configure your trading terminal preferences.</p>
-            
-            <form id="profile-setup-form">
-                <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase;">1. Personal Details</h4>
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div style="width: 30%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">TITLE</label>
-                            <select id="setup-title" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                                <option value="Mr.">Mr.</option>
-                                <option value="Mrs.">Mrs.</option>
-                                <option value="Miss">Miss</option>
-                            </select>
-                        </div>
-                        <div style="width: 70%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">FIRST NAME</label>
-                            <input type="text" id="setup-fname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div style="width: 50%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">MIDDLE NAME</label>
-                            <input type="text" id="setup-mname" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                        </div>
-                        <div style="width: 50%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">LAST NAME</label>
-                            <input type="text" id="setup-lname" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 50%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">DATE OF BIRTH</label>
-                            <input type="date" id="setup-dob" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                        </div>
-                        <div style="width: 50%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">GENDER</label>
-                            <select id="setup-gender" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="border-bottom: 1px solid #2a3447; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase;">2. Account Classification</h4>
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 50%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">CLASSIFICATION</label>
-                            <select id="setup-class" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                                <option value="Trader">Trader</option>
-                                <option value="Investor">Investor</option>
-                            </select>
-                        </div>
-                        <div style="width: 50%;">
-                            <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">TRADER TYPE</label>
-                            <select id="setup-tradertype" required style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                                <option value="ACTIVE">ACTIVE</option>
-                                <option value="PASSIVE">PASSIVE</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="padding-bottom: 20px;">
-                    <h4 style="margin: 0 0 12px 0; color: #00c853; font-size: 14px; text-transform: uppercase;">3. Nominee Registration</h4>
-                    <div style="margin-bottom: 12px;">
-                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">NOMINEE FULL NAME</label>
-                        <input type="text" id="setup-nominee-name" required placeholder="e.g., Jane Doe" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                    </div>
-                    <div style="margin-bottom: 12px;">
-                        <label style="display: block; font-size: 11px; color: #94a3b8; margin-bottom: 5px;">RELATIONSHIP WITH ACCOUNT HOLDER</label>
-                        <input type="text" id="setup-nominee-relation" required placeholder="e.g., Mother, Spouse, Brother" style="width: 100%; padding: 10px; background: #0f141c; border: 1px solid #2a3447; border-radius: 6px; color: #fff; font-size: 13px;">
-                    </div>
-                </div>
-                
-                <button type="submit" style="width: 100%; padding: 12px; background: #00c853; border: none; border-radius: 6px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Save Profile & Launch Terminal
-                </button>
-            </form>
-        </div>
-    </div>
+        </div><!-- /.mobile-frame -->
+    </div><!-- /.desktop-wrapper -->
 
     <script src="app.js" defer></script>
 </body>
