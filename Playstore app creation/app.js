@@ -784,67 +784,6 @@ function initializeApp() {
 }
 
 // ==========================================================================
-// ☁️ GOOGLE DRIVE 15GB FREE STORAGE MANAGEMENT SYSTEM
-// ==========================================================================
-
-function initializeGoogleTokenEngine() {
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: GOOGLE_DRIVE_SCOPE,
-            callback: (tokenResponse) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    currentAccessToken = tokenResponse.access_token;
-                    localStorage.setItem('google_access_token', currentAccessToken);
-                    console.log("Google Drive 15GB Stream Storage Authenticated.");
-                }
-            },
-        });
-    }
-}
-
-async function handleCloudAvatarUpload(file) {
-    if (!tokenClient) {
-        initializeGoogleTokenEngine();
-    }
-    if (!currentAccessToken) {
-        currentAccessToken = localStorage.getItem('google_access_token');
-    }
-    
-    if (!currentAccessToken && tokenClient) {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-        return;
-    } else if (!tokenClient) {
-        alert("Google's security script is being blocked by your browser or is still loading. Please refresh the page and try again.");
-        return;
-    }
-
-    try {
-        let folderId = localStorage.getItem('google_drive_folder_id');
-        if (!folderId) {
-            folderId = await getOrCreateDriveFolder(currentAccessToken);
-            if (folderId) localStorage.setItem('google_drive_folder_id', folderId);
-        }
-        await sendFileStreamToGoogleDrive(file, folderId, currentAccessToken);
-    } catch (error) {
-        console.error("Cloud Storage Pipeline Intercept Fault:", error);
-        tokenClient.requestAccessToken({ prompt: 'none' });
-    }
-}
-
-async function getOrCreateDriveFolder(accessToken) {
-    const query = encodeURIComponent("name = 'ApexTrade_Terminal_Assets' and mimeType = 'application/vnd.google-apps.folder' and trashed = false");
-    const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${query}`;
-    const response = await fetch(searchUrl, { headers: { 'Authorization': `Bearer ${accessToken}` } });
-    const data = await response.json();
-    if (data.files && data.files.length > 0) return data.files[0].id;
-    
-    const folderMetadata = { name: 'ApexTrade_Terminal_Assets', mimeType: 'application/vnd.google-apps.folder' };
-    const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
-        method: 'POST',
-       
-    return new Promise((resolve, reject) => {
- // ==========================================================================
 // ☁️ SECURE ADMIN CLOUD STORAGE SYSTEM (APPS SCRIPT BRIDGE)
 // ==========================================================================
 
@@ -854,8 +793,8 @@ async function handleCloudAvatarUpload(file) {
     const cloudBtn = document.getElementById("cloud-sync-btn");
     if(cloudBtn) cloudBtn.textContent = "⏳ Uploading securely...";
 
-    const creds = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials'));
-    const customerId = creds ? creds.clientId : "Unknown_Customer";
+    const creds = JSON.parse(localStorage.getItem('current_user') || localStorage.getItem('user_credentials') || '{}');
+    const customerId = creds.clientId || "Unknown_Customer";
 
     const reader = new FileReader();
     reader.onload = async function() {
@@ -880,10 +819,11 @@ async function handleCloudAvatarUpload(file) {
                 }
                 alert("Profile photo securely saved to the admin database!");
             } else {
-                alert("Upload failed.");
+                alert("Upload failed: " + (result.message || "Unknown error"));
             }
         } catch (error) {
             console.error("Transmission Error:", error);
+            alert("Network error. Please check your connection.");
         } finally {
             if(cloudBtn) cloudBtn.textContent = "☁️ Save to Google Drive";
         }
@@ -892,4 +832,15 @@ async function handleCloudAvatarUpload(file) {
 }
 
 // Global UI Initialization
+// Connect the upload button to the bridge
+const cloudSyncBtn = document.getElementById("cloud-sync-btn");
+const avatarUpload = document.getElementById("avatar-upload");
+
+if (cloudSyncBtn && avatarUpload) {
+    cloudSyncBtn.onclick = () => {
+        const file = avatarUpload.files[0];
+        if (file) handleCloudAvatarUpload(file);
+        else alert("Please select a file first.");
+    };
+}
 window.addEventListener("DOMContentLoaded", initializeApp);
