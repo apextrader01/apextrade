@@ -176,13 +176,16 @@ authFormContainer?.addEventListener("submit", async (e) => {
     }
 });
 
-// --- STEP 2: OTP VERIFICATION ---
+// --- STEP 2: OTP VERIFICATION (REFINED) ---
 document.getElementById("verify-otp-btn")?.addEventListener("click", async () => {
-    const userEnteredOtp = document.getElementById("auth-otp").value.trim();
+    // .replace(/\s/g, '') removes ALL spaces, even if they are accidental
+    const rawInput = document.getElementById("auth-otp").value;
+    const userEnteredOtp = rawInput.replace(/\s/g, ''); 
     const btn = document.getElementById("verify-otp-btn");
     
+    // Check if the input is actually 6 characters long AFTER cleaning
     if (!pendingUserId || userEnteredOtp.length !== 6) {
-        alert("Please enter a valid 6-digit code.");
+        alert("Verification Error: Code must be exactly 6 digits.");
         return;
     }
 
@@ -190,25 +193,27 @@ document.getElementById("verify-otp-btn")?.addEventListener("click", async () =>
         btn.textContent = "VERIFYING...";
         const docSnap = await getDoc(doc(db, "users", pendingUserId));
         
-        // This is the fix: String() ensures we compare text to text
-        if (docSnap.exists() && String(docSnap.data().currentOtp) === String(userEnteredOtp)) {
+        // Ensure we handle both Numbers and Strings by using String()
+        const dbOtp = String(docSnap.data()?.currentOtp || "");
+        
+        if (docSnap.exists() && dbOtp === userEnteredOtp) {
             isOtpVerified = true;
-            // Erase OTP from DB for security
             await setDoc(doc(db, "users", pendingUserId), { currentOtp: null }, { merge: true });
             
             btn.textContent = "VERIFIED!";
             btn.style.background = "#fff";
             
             setTimeout(() => {
-                onAuthStateChanged(auth, () => {}); // Triggers dashboard load
+                onAuthStateChanged(auth, () => {}); 
             }, 500);
         } else {
-            alert("Invalid or expired OTP code.");
+            alert("Code Mismatch: The code entered does not match our records.");
             btn.textContent = "VERIFY & ENTER TERMINAL";
         }
     } catch (err) {
         console.error("Verification error:", err);
         btn.textContent = "VERIFY & ENTER TERMINAL";
+        alert("System error. Please try again.");
     }
 });
 
