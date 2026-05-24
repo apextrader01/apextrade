@@ -22,81 +22,85 @@ const GOOGLE_CLIENT_ID = "338294665324-uo4kj0ffgsk0eucvlbihj6nvkfmdipo9.apps.goo
 
 // 🔄 Automatically handle the customer's Google profile response
 function handleGoogleAuthResponse(response) {
-    const responsePayload = decodeJwtToken(response.credential);
-
-    const nameParts = responsePayload.name.trim().split(/\s+/);
-    const defaultFirstName = nameParts[0] || "";
-    const defaultLastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
-    const defaultMiddleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
-
-    if(document.getElementById('setup-fname')) document.getElementById('setup-fname').value = defaultFirstName;
-    if(document.getElementById('setup-mname')) document.getElementById('setup-mname').value = defaultMiddleName;
-    if(document.getElementById('setup-lname')) document.getElementById('setup-lname').value = defaultLastName;
-
-    const modal = document.getElementById('profile-setup-modal');
-    if (modal) {
-        modal.style.display = 'flex';
+    try {
+        const responsePayload = decodeJwtToken(response.credential);
+        const fullNameStr = responsePayload.name || "User";
+        const nameParts = fullNameStr.trim().split(/\s+/);
         
-        document.getElementById('profile-setup-form').onsubmit = function(e) {
-            e.preventDefault();
+        const defaultFirstName = nameParts[0] || "";
+        const defaultLastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+        const defaultMiddleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+
+        if(document.getElementById('setup-fname')) document.getElementById('setup-fname').value = defaultFirstName;
+        if(document.getElementById('setup-mname')) document.getElementById('setup-mname').value = defaultMiddleName;
+        if(document.getElementById('setup-lname')) document.getElementById('setup-lname').value = defaultLastName;
+
+        const modal = document.getElementById('profile-setup-modal');
+        if (modal) {
+            modal.style.display = 'flex';
             
-            const prefix = document.getElementById('setup-title').value;
-            const fName = document.getElementById('setup-fname').value.trim();
-            const mName = document.getElementById('setup-mname').value.trim();
-            const lName = document.getElementById('setup-lname').value.trim();
-            const combinedFullName = `${prefix} ${fName} ${mName ? mName + ' ' : ''}${lName}`;
-            
-            const customerUser = {
-                username: responsePayload.email,
-                fullName: combinedFullName,
-                profilePic: responsePayload.picture,
-                clientId: generateAutomatedClientId(fName),
-                email: responsePayload.email,
-                dob: document.getElementById('setup-dob').value,
-                gender: document.getElementById('setup-gender').value,
-                classification: document.getElementById('setup-class').value,
-                traderType: document.getElementById('setup-tradertype').value,
-                nomineeName: document.getElementById('setup-nominee-name').value.trim(),
-                nomineeRelation: document.getElementById('setup-nominee-relation').value.trim(),
-                salutation: prefix
+            document.getElementById('profile-setup-form').onsubmit = function(e) {
+                e.preventDefault();
+                const prefix = document.getElementById('setup-title').value;
+                const fName = document.getElementById('setup-fname').value.trim();
+                const mName = document.getElementById('setup-mname').value.trim();
+                const lName = document.getElementById('setup-lname').value.trim();
+                const combinedFullName = `${prefix} ${fName} ${mName ? mName + ' ' : ''}${lName}`;
+                
+                const customerUser = {
+                    username: responsePayload.email,
+                    fullName: combinedFullName,
+                    profilePic: responsePayload.picture,
+                    clientId: generateAutomatedClientId(fName),
+                    email: responsePayload.email,
+                    dob: document.getElementById('setup-dob').value,
+                    gender: document.getElementById('setup-gender').value,
+                    classification: document.getElementById('setup-class').value,
+                    traderType: document.getElementById('setup-tradertype').value,
+                    nomineeName: document.getElementById('setup-nominee-name').value.trim(),
+                    nomineeRelation: document.getElementById('setup-nominee-relation').value.trim(),
+                    salutation: prefix
+                };
+                
+                localStorage.setItem('user_credentials', JSON.stringify(customerUser));
+                localStorage.setItem('current_user', JSON.stringify(customerUser));
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('login_status', 'true');
+                
+                modal.style.display = 'none';
+                alert(`Welcome, ${customerUser.fullName}! Security onboarding profile locked successfully.`);
+                window.location.reload();
             };
-            
-            localStorage.setItem('user_credentials', JSON.stringify(customerUser));
-            localStorage.setItem('current_user', JSON.stringify(customerUser));
+        } else {
+            const fallbackProfile = {
+                username: responsePayload.email,
+                fullName: "Mr. " + fullNameStr,
+                profilePic: responsePayload.picture,
+                clientId: generateAutomatedClientId(fullNameStr),
+                email: responsePayload.email,
+                dob: "2002-05-15",
+                gender: "Male",
+                classification: "Trader",
+                traderType: "ACTIVE",
+                nomineeName: "Not Registered",
+                nomineeRelation: "N/A",
+                salutation: "Mr."
+            };
+            localStorage.setItem('user_credentials', JSON.stringify(fallbackProfile));
+            localStorage.setItem('current_user', JSON.stringify(fallbackProfile));
             localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('login_status', 'true');
-            
-            modal.style.display = 'none';
-            alert(`Welcome, ${customerUser.fullName}! Security onboarding profile locked successfully.`);
             window.location.reload();
-        };
-    } else {
-        const fallbackProfile = {
-            username: responsePayload.email,
-            fullName: "Mr. " + responsePayload.name,
-            profilePic: responsePayload.picture,
-            clientId: generateAutomatedClientId(responsePayload.name),
-            email: responsePayload.email,
-            dob: "2002-05-15",
-            gender: "Male",
-            classification: "Trader",
-            traderType: "ACTIVE",
-            nomineeName: "Not Registered",
-            nomineeRelation: "N/A",
-            salutation: "Mr."
-        };
-        localStorage.setItem('user_credentials', JSON.stringify(fallbackProfile));
-        localStorage.setItem('current_user', JSON.stringify(fallbackProfile));
-        localStorage.setItem('isLoggedIn', 'true');
-        window.location.reload();
+        }
+    } catch (err) {
+        console.error("Google Login Parsing Error:", err);
     }
 }
 
 // 🛠️ Helper function to decode Google's secure token
 function decodeJwtToken(token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
@@ -192,7 +196,6 @@ const holdingsList = document.getElementById("holdings-list");
 const activityLogList = document.getElementById("activity-log-list");
 const portfolioBalanceEl = document.getElementById("portfolio-balance");
 const portfolioChangeBadge = document.getElementById("portfolio-change-badge");
-const statusTimeEl = document.getElementById("status-time");
 const portfolioInvestedEl = document.getElementById("portfolio-invested");
 const portfolioPnlEl = document.getElementById("portfolio-pnl");
 const watchlistCountEl = document.getElementById("watchlist-count");
@@ -481,38 +484,45 @@ function updateUI() {
 
 function openOrderModal(asset) {
     selectedAsset = asset;
-    modalTicker.textContent = asset.symbol;
-    modalName.textContent = asset.name;
-    modalLivePrice.textContent = asset.price.toFixed(2);
+    if(modalTicker) modalTicker.textContent = asset.symbol;
+    if(modalName) modalName.textContent = asset.name;
+    if(modalLivePrice) modalLivePrice.textContent = asset.price.toFixed(2);
     
     currentTransactionType = "BUY";
-    toggleBuyBtn.classList.add("active");
-    toggleSellBtn.classList.remove("active");
+    if(toggleBuyBtn) toggleBuyBtn.classList.add("active");
+    if(toggleSellBtn) toggleSellBtn.classList.remove("active");
     
-    transactionQtyInput.value = "10";
-    updateModalCalculations(asset.price);
-    transactionModal.classList.remove("hidden");
+    if(transactionQtyInput) {
+        transactionQtyInput.value = "10";
+        updateModalCalculations(asset.price);
+    }
+    if(transactionModal) transactionModal.classList.remove("hidden");
 }
 
 function updateModalCalculations(price) {
+    if(!transactionQtyInput) return;
     const qty = parseInt(transactionQtyInput.value) || 0;
     const estVal = qty * price;
     const fee = estVal * 0.0005;
     
-    modalOrderValue.textContent = estVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-    modalTradingFee.textContent = fee.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if(modalOrderValue) modalOrderValue.textContent = estVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if(modalTradingFee) modalTradingFee.textContent = fee.toLocaleString('en-IN', { minimumFractionDigits: 2 });
     
     if (currentTransactionType === "BUY") {
-        executeOrderBtn.className = "btn-execute-order btn-buy";
-        executeOrderBtn.textContent = `CONFIRM BUY ORDER (₹${(estVal + fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+        if(executeOrderBtn) {
+            executeOrderBtn.className = "btn-execute-order btn-buy";
+            executeOrderBtn.textContent = `CONFIRM BUY ORDER (₹${(estVal + fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+        }
     } else {
-        executeOrderBtn.className = "btn-execute-order btn-sell";
-        executeOrderBtn.textContent = `CONFIRM SELL ORDER (₹${(estVal - fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+        if(executeOrderBtn) {
+            executeOrderBtn.className = "btn-execute-order btn-sell";
+            executeOrderBtn.textContent = `CONFIRM SELL ORDER (₹${(estVal - fee).toLocaleString('en-IN', { maximumFractionDigits: 2 })})`;
+        }
     }
 }
 
 function closeOrderModal() {
-    transactionModal.classList.add("hidden");
+    if(transactionModal) transactionModal.classList.add("hidden");
     selectedAsset = null;
 }
 
@@ -617,60 +627,57 @@ function setupTabs() {
     });
 }
 
-function startClock() {
-    function updateClock() {
-        const now = new Date();
-        let hours = String(now.getHours()).padStart(2, '0');
-        let minutes = String(now.getMinutes()).padStart(2, '0');
-        if(statusTimeEl) statusTimeEl.textContent = `${hours}:${minutes}`;
-    }
-    updateClock();
-    setInterval(updateClock, 60000);
-}
-
 // ==========================================================================
 // 🔐 AUTHENTICATION & INITIALIZATION LOGIC
 // ==========================================================================
 
 function switchFormState() {
     if (authMode === "LOGIN") {
-        authTitle.textContent = "Log In to ApexTrade";
-        authSubmitBtn.textContent = "LOG IN";
+        if(authTitle) authTitle.textContent = "Log In to ApexTrade";
+        if(authSubmitBtn) authSubmitBtn.textContent = "LOG IN";
         document.querySelectorAll(".signup-only").forEach(el => el.classList.add("hidden"));
     } else {
-        authTitle.textContent = "Create your Account";
-        authSubmitBtn.textContent = "SIGN UP";
+        if(authTitle) authTitle.textContent = "Create your Account";
+        if(authSubmitBtn) authSubmitBtn.textContent = "SIGN UP";
         document.querySelectorAll(".signup-only").forEach(el => el.classList.remove("hidden"));
     }
 }
 
 function showAuthError(message) {
-    authErrorMsg.textContent = message;
-    authErrorMsg.classList.remove("hidden");
+    if(authErrorMsg) {
+        authErrorMsg.textContent = message;
+        authErrorMsg.classList.remove("hidden");
+    }
 }
 
 function handleAuthSubmit(event) {
     event.preventDefault();
+    if(!authUsernameInput || !authPasswordInput) return;
+    
     const username = authUsernameInput.value.trim();
     const password = authPasswordInput.value;
     
     if (authMode === "SIGNUP") {
-        const fullName = document.getElementById("auth-fullname").value.trim();
-        const dob = document.getElementById("auth-dob").value;
+        const fullNameInput = document.getElementById("auth-fullname");
+        const dobInput = document.getElementById("auth-dob");
+        const fullName = fullNameInput ? fullNameInput.value.trim() : "New User";
+        const dob = dobInput ? dobInput.value : "2000-01-01";
+        
         localStorage.setItem('user_credentials', JSON.stringify({ username, password, fullName, dob, clientId: "Pending", classification: "Trader", traderType: "ACTIVE" }));
         
         current_otp = Math.floor(1000 + Math.random() * 9000);
         alert(`[ApexTrade Security] Your One-Time Password (OTP) is: ${current_otp}`);
         
-        authForm.classList.add("hidden");
-        authTitle.classList.add("hidden");
-        authSubtitle.classList.add("hidden");
-        document.getElementById("otp-container").classList.remove("hidden");
+        if(authForm) authForm.classList.add("hidden");
+        if(authTitle) authTitle.classList.add("hidden");
+        if(authSubtitle) authSubtitle.classList.add("hidden");
+        const otpContainer = document.getElementById("otp-container");
+        if(otpContainer) otpContainer.classList.remove("hidden");
     } else {
         const storedCreds = JSON.parse(localStorage.getItem('user_credentials'));
         if (storedCreds && storedCreds.username === username && storedCreds.password === password) {
             localStorage.setItem('isLoggedIn', 'true');
-            window.location.reload(); // Force reload to clear route guards safely
+            window.location.reload(); 
         } else {
             showAuthError("Invalid username or password.");
         }
@@ -678,7 +685,13 @@ function handleAuthSubmit(event) {
 }
 
 function handleVerifyOtp() {
-    const typedOtp = document.getElementById("otp-1").value + document.getElementById("otp-2").value + document.getElementById("otp-3").value + document.getElementById("otp-4").value;
+    const otp1 = document.getElementById("otp-1");
+    const otp2 = document.getElementById("otp-2");
+    const otp3 = document.getElementById("otp-3");
+    const otp4 = document.getElementById("otp-4");
+    if(!otp1 || !otp2 || !otp3 || !otp4) return;
+
+    const typedOtp = otp1.value + otp2.value + otp3.value + otp4.value;
     if (typedOtp === String(current_otp)) {
         localStorage.setItem('isLoggedIn', 'true');
         const creds = JSON.parse(localStorage.getItem('user_credentials'));
@@ -686,7 +699,8 @@ function handleVerifyOtp() {
         localStorage.setItem('user_credentials', JSON.stringify(creds));
         window.location.reload(); 
     } else {
-        document.getElementById("otp-error-msg").classList.remove("hidden");
+        const otpErrorMsg = document.getElementById("otp-error-msg");
+        if(otpErrorMsg) otpErrorMsg.classList.remove("hidden");
     }
 }
 
@@ -718,20 +732,30 @@ function initializeApp() {
     }
 
     // --- LOGGED IN SECURE STATE ---
-    // Critical Fix: Remove the security style block so the dashboard can be seen!
     const tempHideStyle = document.getElementById('temp-auth-hide');
     if(tempHideStyle) tempHideStyle.remove();
 
     if(desktopWrapper) desktopWrapper.classList.remove("hidden");
     if(authContainer) authContainer.classList.add("hidden");
     
-    // Check if the user previously uploaded a photo and display it immediately
     const savedAvatar = localStorage.getItem("user_avatar");
     if (savedAvatar) {
-       // 📸 Handle customer photo uploads and stream to 15GB Google Server bucket
+        const avatarContainer = document.getElementById("profile-avatar-img-container");
+        if (avatarContainer) {
+            avatarContainer.innerHTML = `<img src="${savedAvatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" id="profile-avatar-img">`;
+        }
+    }
+
+    const headerProfileBtn = document.querySelector(".profile-btn");
+    if (headerProfileBtn) headerProfileBtn.onclick = () => showProfilePanel(true);
+    const profileBackBtn = document.getElementById("profile-back-btn");
+    if (profileBackBtn) profileBackBtn.onclick = () => showProfilePanel(false);
+    const backToDashboardBtn = document.getElementById("back-to-dashboard-btn");
+    if (backToDashboardBtn) backToDashboardBtn.onclick = () => showProfilePanel(false);
+    
+    // 📸 NEW: Bound direct button to handle Google Drive logic cleanly
     const avatarUpload = document.getElementById("avatar-upload");
     const cloudSyncBtn = document.getElementById("cloud-sync-btn");
-    
     if (cloudSyncBtn && avatarUpload) {
         cloudSyncBtn.onclick = function() {
             const file = avatarUpload.files[0];
@@ -743,45 +767,18 @@ function initializeApp() {
                 alert('Please choose a valid image file layout.');
                 return;
             }
-            // Because this is a direct click, the browser WILL allow the Google Popup!
+            // Button securely clicked, triggers Google
             handleCloudAvatarUpload(file);
         };
     }
 
-    // Explicitly bind the headers & profile screen navigation buttons
-    const headerProfileBtn = document.querySelector(".profile-btn");
-    if (headerProfileBtn) headerProfileBtn.onclick = () => showProfilePanel(true);
-    const profileBackBtn = document.getElementById("profile-back-btn");
-    if (profileBackBtn) profileBackBtn.onclick = () => showProfilePanel(false);
-    const backToDashboardBtn = document.getElementById("back-to-dashboard-btn");
-    if (backToDashboardBtn) backToDashboardBtn.onclick = () => showProfilePanel(false);
-    
-    // 📸 Handle customer photo uploads and stream to 15GB Google Server bucket
-    const avatarUpload = document.getElementById("avatar-upload");
-    if (avatarUpload) {
-        avatarUpload.onchange = function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                if (!file.type.startsWith('image/')) {
-                    alert('Please choose a valid image file layout.');
-                    return;
-                }
-                handleCloudAvatarUpload(file);
-            }
-        };
-    }
-
-    // Initialize the token client tracking hooks on terminal boot
     initializeGoogleTokenEngine();
-    
     if(logoutBtn) logoutBtn.onclick = performLogout;
     
-    // Core event bindings
     if(searchInput) searchInput.addEventListener("input", handleSearch);
     if(modalCloseBtn) modalCloseBtn.addEventListener("click", closeOrderModal);
     if(executeOrderBtn) executeOrderBtn.addEventListener("click", executeTransaction);
 
-    startClock();
     setupTabs();
     updateUI();
 }
@@ -807,11 +804,9 @@ function initializeGoogleTokenEngine() {
 }
 
 async function handleCloudAvatarUpload(file) {
-    // 🟢 NEW: Wake up the Google engine instantly if it missed the boot window
     if (!tokenClient) {
         initializeGoogleTokenEngine();
     }
-
     if (!currentAccessToken) {
         currentAccessToken = localStorage.getItem('google_access_token');
     }
