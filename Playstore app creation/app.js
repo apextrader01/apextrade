@@ -849,7 +849,6 @@ async function getOrCreateDriveFolder(accessToken) {
 // ☁️ SECURE ADMIN CLOUD STORAGE SYSTEM (APPS SCRIPT BRIDGE)
 // ==========================================================================
 
-// 🟢 PASTE YOUR WEB APP URL (ENDS IN /exec) BETWEEN THE QUOTES:
 const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKWfkH0yGcH-wf0IE7NByB_ZqqbZPaalaQMuNuGVClzYeBpIeCvrbYTGjq6s5amugh/exec";
 
 async function handleCloudAvatarUpload(file) {
