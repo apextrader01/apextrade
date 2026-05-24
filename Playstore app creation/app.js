@@ -1,3 +1,31 @@
+// 1. SAVE PROFILE TO CLOUD (Call this after a successful upload or profile edit)
+async function saveUserProfileToCloud(uid, data) {
+    try {
+        await setDoc(doc(db, "users", uid), {
+            ...data,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        console.log("Profile synced to cloud!");
+    } catch (e) {
+        console.error("Sync error:", e);
+    }
+}
+
+// 2. LOAD PROFILE FROM CLOUD (Call this inside initializeDashboard)
+async function fetchAndRenderProfile(uid) {
+    const docSnap = await getDoc(doc(db, "users", uid));
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Update your UI fields here
+        document.getElementById("profile-client-name").textContent = data.fullName;
+        document.getElementById("profile-client-id").textContent = data.clientId;
+        // If you store the image URL in the DB, load it here:
+        if (data.avatarUrl) {
+             const avatarImg = document.getElementById("profile-avatar-img");
+             if (avatarImg) avatarImg.src = data.avatarUrl;
+        }
+    }
+}
 // Add these imports to the top of your app.js
 import { sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
