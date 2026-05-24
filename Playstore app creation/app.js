@@ -5,15 +5,39 @@
 // ROUTE GUARD — Runs immediately, before DOM is ready
 // Hides the dashboard shell during the auth check to prevent flash-of-content.
 // ==========================================================================
+// app.js - ApexTrade | Premium Stock Portfolio & Terminal Router
+// Architecture: Custom ID/Password Auth + Admin Bridge (Google Apps Script)
 
-(function routeGuard() {
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
+// [INSERT YOUR FIREBASE IMPORT HERE]
+import { auth, db } from './firebase-init.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
+// ================================================================
+// ROUTE GUARD - Runs immediately, before DOM is ready
+// ================================================================
+
+
+      // ================================================================
+// ROUTE GUARD - Runs immediately using Firebase Auth
+// ================================================================
+
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        // No user logged in: Hide the shell
         const style = document.createElement('style');
         style.id = 'temp-auth-hide';
         style.textContent = '.desktop-wrapper { display: none !important; }';
         document.head.appendChild(style);
+        console.log("Auth: Access denied, redirecting...");
+    } else {
+        // User is logged in: Ensure content is visible
+        const existingStyle = document.getElementById('temp-auth-hide');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+        console.log("Auth: Access granted for user:", user.email);
     }
-})();
+});
 
 // ==========================================================================
 // DATABASE & STATE
