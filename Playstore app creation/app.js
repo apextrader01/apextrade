@@ -1,12 +1,12 @@
 // ==========================================================================
-// 1. IMPORTS
+// 1. IMPORTS & FIREBASE SETUP
 // ==========================================================================
 import { auth, db } from './firebase-init.js';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // ==========================================================================
-// 2. GLOBAL STATE & DATABASE
+// 2. STATE & MOCK DATA
 // ==========================================================================
 const INSTRUMENTS_DB = [
     { symbol: "TATASTEEL", name: "Tata Steel Ltd.", price: 205.20, change: -1.62 },
@@ -41,14 +41,14 @@ let authMode = "LOGIN";
 let isDashboardInitialized = false;
 
 // ==========================================================================
-// 3. FIREBASE AUTHENTICATION (THE GATEKEEPER)
+// 3. AUTHENTICATION CONTROLLER (THE GATEKEEPER)
 // ==========================================================================
 const authContainer = document.getElementById("auth-container");
 const desktopWrapper = document.querySelector(".desktop-wrapper");
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // User is logged in: Show Terminal
+        // Logged In: Show Dashboard
         authContainer?.classList.add("hidden");
         desktopWrapper?.classList.remove("hidden");
         
@@ -57,14 +57,14 @@ onAuthStateChanged(auth, (user) => {
             isDashboardInitialized = true;
         }
     } else {
-        // User is logged out: Show Login Screen
+        // Logged Out: Show Login Screen
         desktopWrapper?.classList.add("hidden");
         authContainer?.classList.remove("hidden");
     }
 });
 
 // ==========================================================================
-// 4. LOGIN / SIGNUP UI LOGIC
+// 4. LOGIN & SIGNUP FORMS
 // ==========================================================================
 const authForm = document.getElementById("auth-form");
 const authTitle = document.getElementById("auth-title");
@@ -72,21 +72,19 @@ const authToggleLink = document.getElementById("auth-toggle-link");
 const authSubmitBtn = document.getElementById("auth-submit-btn");
 const authErrorMsg = document.getElementById("auth-error-msg");
 
-// Toggle between Login and Signup modes
 authToggleLink?.addEventListener("click", (e) => {
     e.preventDefault();
     authMode = authMode === "LOGIN" ? "SIGNUP" : "LOGIN";
     
     const isLogin = authMode === "LOGIN";
-    if(authTitle) authTitle.textContent = isLogin ? "Log In to ApexTrade" : "Create your Account";
-    if(authSubmitBtn) authSubmitBtn.textContent = isLogin ? "LOG IN" : "SIGN UP";
-    if(authToggleLink) authToggleLink.textContent = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In";
+    if (authTitle) authTitle.textContent = isLogin ? "Log In to ApexTrade" : "Create your Account";
+    if (authSubmitBtn) authSubmitBtn.textContent = isLogin ? "LOG IN" : "SIGN UP";
+    if (authToggleLink) authToggleLink.textContent = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In";
     
     document.querySelectorAll(".signup-only").forEach(el => el.classList.toggle("hidden", isLogin));
     authErrorMsg?.classList.add("hidden");
 });
 
-// Handle Form Submission with Firebase
 authForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("auth-username").value.trim();
@@ -96,12 +94,12 @@ authForm?.addEventListener("submit", async (e) => {
     try {
         if (authMode === "SIGNUP") {
             await createUserWithEmailAndPassword(auth, email, password);
-            localStorage.setItem("user_full_name", fullName); // Save name temporarily for profile
+            localStorage.setItem("user_full_name", fullName); 
         } else {
             await signInWithEmailAndPassword(auth, email, password);
         }
     } catch (error) {
-        if(authErrorMsg) {
+        if (authErrorMsg) {
             authErrorMsg.textContent = "Error: " + error.message;
             authErrorMsg.classList.remove("hidden");
         } else {
@@ -111,27 +109,24 @@ authForm?.addEventListener("submit", async (e) => {
 });
 
 // ==========================================================================
-// 5. TERMINAL DASHBOARD INITIALIZATION
+// 5. DASHBOARD INITIALIZATION
 // ==========================================================================
 function initializeDashboard() {
-    console.log("Terminal Booting...");
+    console.log("ApexTrade Terminal Booting...");
 
     // Bind Logout
-    document.getElementById("logout-btn")?.addEventListener("click", () => {
-        signOut(auth);
-    });
+    document.getElementById("logout-btn")?.addEventListener("click", () => signOut(auth));
 
     // Bind Search
     const searchInput = document.getElementById("search-input");
     const searchClearBtn = document.getElementById("search-clear-btn");
-    
     searchInput?.addEventListener("input", handleSearch);
     searchClearBtn?.addEventListener("click", () => {
-        if(searchInput) searchInput.value = "";
+        if (searchInput) searchInput.value = "";
         handleSearch({ target: { value: "" } });
     });
 
-    // Bind Order Modal Buttons
+    // Bind Modals
     document.getElementById("modal-close-btn")?.addEventListener("click", closeOrderModal);
     document.getElementById("execute-order-btn")?.addEventListener("click", executeTransaction);
     
@@ -162,7 +157,7 @@ function initializeDashboard() {
     document.getElementById("profile-back-btn")?.addEventListener("click", () => showProfilePanel(false));
     document.getElementById("back-to-dashboard-btn")?.addEventListener("click", () => showProfilePanel(false));
 
-    // Bind Cloud Avatar Upload
+    // Avatar Upload Binding
     const cloudSyncBtn = document.getElementById("cloud-sync-btn");
     const avatarUpload = document.getElementById("avatar-upload");
     cloudSyncBtn?.addEventListener("click", () => {
@@ -171,7 +166,7 @@ function initializeDashboard() {
         handleCloudAvatarUpload(file);
     });
 
-    // Restore saved avatar if present
+    // Restore Avatar
     const savedAvatar = localStorage.getItem("user_avatar");
     const avatarContainer = document.getElementById("profile-avatar-img-container");
     if (savedAvatar && avatarContainer) {
@@ -183,22 +178,19 @@ function initializeDashboard() {
     fetchNews();
 }
 
+// ==========================================================================
+// 6. TERMINAL LOGIC
+// ==========================================================================
 async function fetchNews() {
     try {
         const newsSnapshot = await getDocs(collection(db, "news"));
-        newsSnapshot.forEach((doc) => console.log("News Item:", doc.data().headline));
+        newsSnapshot.forEach((doc) => console.log("News:", doc.data().headline));
     } catch (e) {
-        console.log("No news found or firestore not setup yet.");
+        console.log("No news found.");
     }
 }
 
-// ==========================================================================
-// 6. TERMINAL LOGIC (Search, Portfolio, Watchlist, Modals)
-// ==========================================================================
-
-function flattenString(str) {
-    return str ? str.replace(/\s+/g, '').toUpperCase() : "";
-}
+function flattenString(str) { return str ? str.replace(/\s+/g, '').toUpperCase() : ""; }
 
 function handleSearch(event) {
     const rawValue = event.target.value;
@@ -216,8 +208,7 @@ function handleSearch(event) {
     }
 
     const results = INSTRUMENTS_DB.filter(item =>
-        flattenString(item.symbol).includes(query) ||
-        flattenString(item.name).includes(query)
+        flattenString(item.symbol).includes(query) || flattenString(item.name).includes(query)
     );
     
     if (results.length === 0) {
@@ -276,8 +267,8 @@ function renderInstrumentRow(item, container) {
 
 function toggleWatchlist(symbol) {
     const index = watchlistSymbols.indexOf(symbol);
-    if (index > -1) { watchlistSymbols.splice(index, 1); }
-    else            { watchlistSymbols.push(symbol); }
+    if (index > -1) watchlistSymbols.splice(index, 1);
+    else watchlistSymbols.push(symbol);
     renderWatchlist();
 }
 
@@ -357,9 +348,7 @@ function renderPortfolio() {
     const portfolioInvestedEl = document.getElementById("portfolio-invested");
     const portfolioPnlEl = document.getElementById("portfolio-pnl");
 
-    if (portfolioInvestedEl) {
-        portfolioInvestedEl.textContent = `₹${totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-    }
+    if (portfolioInvestedEl) portfolioInvestedEl.textContent = `₹${totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
     if (portfolioPnlEl) {
         portfolioPnlEl.className   = `stat-value ${netPnlClass}`;
         portfolioPnlEl.textContent = `${netSign}₹${netPnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${netSign}${netPnlPercent.toFixed(2)}%)`;
@@ -410,9 +399,7 @@ function updatePortfolioBalance() {
     const portfolioBalanceEl = document.getElementById("portfolio-balance");
     const portfolioChangeBadge = document.getElementById("portfolio-change-badge");
 
-    if (portfolioBalanceEl) {
-        portfolioBalanceEl.textContent = totalPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-    }
+    if (portfolioBalanceEl) portfolioBalanceEl.textContent = totalPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
     const dailyPercent = dailyInvested > 0 ? (dailyChangeVal / dailyInvested) * 100 : 0;
     const isPos        = dailyChangeVal >= 0;
@@ -428,13 +415,8 @@ function updateUI() {
     updatePortfolioBalance();
 }
 
-// ==========================================================================
-// 7. ORDER MODAL & TRANSACTIONS
-// ==========================================================================
-
 function openOrderModal(asset) {
     selectedAsset = asset;
-    
     document.getElementById("modal-ticker").textContent = asset.symbol;
     document.getElementById("modal-name").textContent = asset.name;
     document.getElementById("modal-live-price").textContent = asset.price.toFixed(2);
@@ -448,7 +430,6 @@ function openOrderModal(asset) {
         qtyInput.value = "10";
         updateModalCalculations(asset.price);
     }
-
     document.getElementById("transaction-modal")?.classList.remove("hidden");
 }
 
@@ -481,7 +462,6 @@ function closeOrderModal() {
 
 function executeTransaction() {
     if (!selectedAsset) return;
-
     const qty = parseInt(document.getElementById("transaction-qty")?.value);
     if (!qty || qty <= 0) { alert("Please enter a valid quantity."); return; }
 
@@ -506,9 +486,7 @@ function executeTransaction() {
 
         cashBalance += (orderVal - fee);
         existing.qty -= qty;
-        if (existing.qty === 0) {
-            portfolioHoldings = portfolioHoldings.filter(h => h.symbol !== liveAsset.symbol);
-        }
+        if (existing.qty === 0) portfolioHoldings = portfolioHoldings.filter(h => h.symbol !== liveAsset.symbol);
     }
 
     transactionLogs.push({
@@ -522,10 +500,6 @@ function executeTransaction() {
     updateUI();
     closeOrderModal();
 }
-
-// ==========================================================================
-// 8. PROFILE PANEL & GOOGLE DRIVE BRIDGE
-// ==========================================================================
 
 function showProfilePanel(show) {
     const profilePanel       = document.getElementById("profile-panel");
@@ -550,10 +524,9 @@ function renderProfileDetails() {
     const user = auth.currentUser;
     if (!user) return;
 
-    // Build the user profile from Firebase + Local
     const email = user.email;
     const fullName = localStorage.getItem("user_full_name") || "Trader";
-    const clientId = fullName.substring(0, 2).toUpperCase() + "02X"; // Simulated Client ID
+    const clientId = fullName.substring(0, 2).toUpperCase() + "02X"; 
 
     const setField = (id, value) => {
         const el = document.getElementById(id);
@@ -563,19 +536,15 @@ function renderProfileDetails() {
     setField("profile-client-name", fullName);
     setField("profile-email-display", email);
     setField("profile-client-id", clientId);
-    setField("profile-dob-display", "2002-05-15"); // Simulated
-    setField("profile-gender-display", "Male"); // Simulated
+    setField("profile-dob-display", "2002-05-15"); 
+    setField("profile-gender-display", "Male"); 
 }
 
 function setupTabs() {
     document.querySelectorAll(".tab-btn").forEach(tab => {
         tab.onclick = function () {
             const targetTab = tab.getAttribute("data-tab");
-
-            if (targetTab === "profile-panel") {
-                showProfilePanel(true);
-                return;
-            }
+            if (targetTab === "profile-panel") { showProfilePanel(true); return; }
 
             showProfilePanel(false);
             document.querySelectorAll(".tab-btn").forEach(t => t.classList.remove("active"));
@@ -584,7 +553,6 @@ function setupTabs() {
 
             document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
             document.getElementById(targetTab)?.classList.add("active");
-
             updateUI();
         };
     });
@@ -593,10 +561,7 @@ function setupTabs() {
 const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwKWfkH0yGcH-wf0IE7NByB_ZqqbZPaalaQMuNuGVClzYeBpIeCvrbYTGjq6s5amugh/exec";
 
 async function handleCloudAvatarUpload(file) {
-    if (!file.type.startsWith('image/')) {
-        alert("Please choose a valid image file.");
-        return;
-    }
+    if (!file.type.startsWith('image/')) { alert("Please choose a valid image file."); return; }
 
     const cloudBtn = document.getElementById("cloud-sync-btn");
     if (cloudBtn) cloudBtn.textContent = "⏳ Uploading securely...";
@@ -620,19 +585,11 @@ async function handleCloudAvatarUpload(file) {
             if (result.status === 'success') {
                 localStorage.setItem("user_avatar", reader.result);
                 const avatarContainer = document.getElementById("profile-avatar-img-container");
-                if (avatarContainer) {
-                    avatarContainer.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
-                }
+                if (avatarContainer) avatarContainer.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
                 alert("Photo updated to Google Drive successfully!"); 
-            } else {
-                alert("Photo upload failed."); 
-            }
-        } catch (error) {
-            console.error("Bridge Transmission Error:", error);
-            alert("Network error. Please check your connection and try again.");
-        } finally {
-            if (cloudBtn) cloudBtn.textContent = "☁️ Save to Google Drive";
-        }
+            } else { alert("Photo upload failed."); }
+        } catch (error) { alert("Network error. Please try again."); } 
+        finally { if (cloudBtn) cloudBtn.textContent = "☁️ Save to Google Drive"; }
     };
     reader.readAsDataURL(file);
 }
