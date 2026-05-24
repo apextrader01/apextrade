@@ -1,72 +1,76 @@
-// Ensure this is imported at the top of app.js
-import { createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { auth, db } from './firebase-init.js';
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    sendEmailVerification, 
+    onAuthStateChanged, 
+    signOut 
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-// Inside your Signup event listener:
-try {
-    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // THIS IS THE TRIGGER
-    await sendEmailVerification(userCred.user);
-    
-    alert("Verification email sent! Please check your inbox (and spam folder).");
-} catch (err) {
-    console.error("Registration error:", err);
-    alert(err.message);
-}
+// --- 1. AUTH STATE MONITOR ---
+onAuthStateChanged(auth, async (user) => {
+    const authContainer = document.getElementById("auth-container");
+    const desktopWrapper = document.querySelector(".desktop-wrapper");
 
-// 1. SAVE PROFILE TO CLOUD (Call this after a successful upload or profile edit)
-async function saveUserProfileToCloud(uid, data) {
-    try {
-        await setDoc(doc(db, "users", uid), {
-            ...data,
-            updatedAt: new Date().toISOString()
-        }, { merge: true });
-        console.log("Profile synced to cloud!");
-    } catch (e) {
-        console.error("Sync error:", e);
-    }
-}
-
-// 2. LOAD PROFILE FROM CLOUD (Call this inside initializeDashboard)
-async function fetchAndRenderProfile(uid) {
-    const docSnap = await getDoc(doc(db, "users", uid));
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        // Update your UI fields here
-        document.getElementById("profile-client-name").textContent = data.fullName;
-        document.getElementById("profile-client-id").textContent = data.clientId;
-        // If you store the image URL in the DB, load it here:
-        if (data.avatarUrl) {
-             const avatarImg = document.getElementById("profile-avatar-img");
-             if (avatarImg) avatarImg.src = data.avatarUrl;
+    if (user) {
+        // Check if verified
+        if (!user.emailVerified) {
+            alert("Please verify your email address to access the terminal.");
+            await signOut(auth);
+            return;
         }
-    }
-}
-// Add these imports to the top of your app.js
-import { sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-
-// ... (your existing code)
-
-// 2. REPLACE YOUR SUBMIT HANDLER WITH THIS:
-authForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("auth-username").value.trim();
-    
-    // This sends the "OTP" (The Magic Link)
-    const actionCodeSettings = {
-        url: window.location.href, // This returns the user to the current page
-        handleCodeInApp: true,
-    };
-
-    try {
-        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-        window.localStorage.setItem('emailForSignIn', email);
-        alert("Success! We've sent a verification link to your email. Click it to log in.");
-    } catch (err) {
-        alert("Error: " + err.message);
+        authContainer?.classList.add("hidden");
+        desktopWrapper?.classList.remove("hidden");
+        await fetchAndRenderProfile(user.uid);
+    } else {
+        desktopWrapper?.classList.add("hidden");
+        authContainer?.classList.remove("hidden");
     }
 });
 
+// --- 2. SIGNUP LOGIC (With Email Verification & Firestore Sync) ---
+document.getElementById("auth-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("auth-username").value.trim();
+    const password = document.getElementById("auth-password").value;
+    const fullName = document.getElementById("auth-fullname")?.value.trim() || "Trader";
+    
+    // Check if mode is Signup (detects if name field is visible)
+    const isSignup = !document.getElementById("auth-fullname").parentElement.classList.contains("hidden");
+
+    try {
+        if (isSignup) {
+            const userCred = await createUserWithEmailAndPassword(auth, email, password);
+            await sendEmailVerification(userCred.user);
+            
+            // Sync Profile to Firestore
+            await setDoc(doc(db, "users", userCred.user.uid), {
+                fullName: fullName,
+                clientId: fullName.substring(0, 2).toUpperCase() + "02X",
+                email: email,
+                updatedAt: new Date().toISOString()
+            });
+            alert("Verification email sent! Check your inbox.");
+        } else {
+            await signInWithEmailAndPassword(auth, email, password);
+        }
+    } catch (err) { alert(err.message); }
+});
+
+// --- 3. CLOUD PROFILE SYNC ---
+async function fetchAndRenderProfile(uid) {
+    try {
+        const docSnap = await getDoc(doc(db, "users", uid));
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            document.getElementById("profile-client-name").textContent = data.fullName;
+            document.getElementById("profile-client-id").textContent = data.clientId;
+        }
+    } catch (e) {
+        console.error("Profile load error:", e);
+    }
+}
 // 3. ADD THIS FUNCTION TO THE BOTTOM OF app.js
 // This automatically logs them in when they click the link in their email
 window.addEventListener('DOMContentLoaded', async () => {
