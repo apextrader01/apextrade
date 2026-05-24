@@ -3,7 +3,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-aut
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AKfycbwKWfkH0yGcH-wf0IE7NByB_ZqqbZPaalaQMuNuGVClzYeBpIeCvrbYTGjq6s5amugh", 
+  apiKey: "AIzaSyAH6axbLrzbC9nsZcd0YGXZYRiKGJ2IjDE", 
   authDomain: "apextrade-live.firebaseapp.com",
   projectId: "apextrade-live",
   storageBucket: "apextrade-live.appspot.com",
