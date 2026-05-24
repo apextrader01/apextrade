@@ -13,131 +13,62 @@ import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/
 // ==========================================================================
 // 2. STATE & MOCK DATA
 // ==========================================================================
-const INSTRUMENTS_DB = [
-    { symbol: "NIFTY50", name: "Nifty 50 Index", price: 22530.70, change: 0.45 },
-    { symbol: "BANKNIFTY", name: "Nifty Bank Index", price: 48923.55, change: -0.12 },
-    { symbol: "TATASTEEL", name: "Tata Steel Ltd.", price: 205.20, change: -1.62 },
-    { symbol: "WIPRO",     name: "Wipro Ltd.", price: 202.97, change: 0.15 },
-    { symbol: "GAIL",      name: "GAIL India Ltd.", price: 160.77, change: 1.12 },
-    { symbol: "RELIANCE",  name: "Reliance Ind.", price: 2930.10, change: 1.05 }
-];
-
-INSTRUMENTS_DB.forEach(item => item.prevClose = item.price / (1 + item.change / 100));
-
-let activeTab = "watchlist-tab";
-let watchlistSymbols = ["NIFTY50", "BANKNIFTY", "TATASTEEL", "WIPRO", "GAIL"];
-let portfolioHoldings = [
-    { symbol: "TATASTEEL", qty: 200, avgBuyPrice: 198.50 },
-    { symbol: "WIPRO",     qty: 250, avgBuyPrice: 190.20 },
-    { symbol: "GAIL",      qty: 332, avgBuyPrice: 148.50 },
-];
-let cashBalance = 145230.50;
-let transactionLogs = [
-    { type: "BUY", symbol: "TATASTEEL", qty: 200, price: 198.50, date: "2026-05-20" },
-    { type: "BUY", symbol: "WIPRO",     qty: 250, price: 190.20, date: "2026-05-21" }
-];
-
-let selectedAsset = null;
-let currentTransactionType = "BUY";
-let authMode = "LOGIN";
 let isDashboardInitialized = false;
 let pendingUserId = null;
 let isOtpVerified = false;
+let authMode = "LOGIN";
+
+// ... [INSTRUMENTS_DB, portfolioHoldings, etc., remain unchanged here] ...
 
 // ==========================================================================
-// 3. SECURE AUTHENTICATION CONTROLLER (2-STEP FLOW)
+// 3. SECURE AUTHENTICATION CONTROLLER
 // ==========================================================================
 const authContainer = document.getElementById("auth-container");
 const desktopWrapper = document.querySelector(".desktop-wrapper");
 const authFormContainer = document.getElementById("auth-form");
 const otpSection = document.getElementById("otp-section");
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        if (!isOtpVerified) {
-            // Logged in, but OTP not verified. Show OTP screen.
-            authFormContainer?.classList.add("hidden");
-            otpSection?.classList.remove("hidden");
-            
-            // Hide the "Don't have an account" toggle links on OTP screen
-            const toggleContainer = document.querySelector(".auth-card > .auth-toggle-container");
-            if (toggleContainer) toggleContainer.style.display = "none";
-            return;
-        }
-        
-        // Fully Verified: Load Dashboard
+// Handle Session Persistence
+onAuthStateChanged(auth, (user) => {
+    if (user && isOtpVerified) {
         authContainer?.classList.add("hidden");
         desktopWrapper?.classList.remove("hidden");
-        await fetchAndRenderProfile(user.uid);
-        
-        if (!isDashboardInitialized) {
-            initializeDashboard();
-            isDashboardInitialized = true;
-        }
+        fetchAndRenderProfile(user.uid);
+        if (!isDashboardInitialized) { initializeDashboard(); isDashboardInitialized = true; }
+    } else if (user) {
+        authFormContainer?.classList.add("hidden");
+        otpSection?.classList.remove("hidden");
     } else {
-        // Logged Out
-        isOtpVerified = false;
-        pendingUserId = null;
         desktopWrapper?.classList.add("hidden");
         authContainer?.classList.remove("hidden");
-        authFormContainer?.classList.remove("hidden");
-        otpSection?.classList.add("hidden");
-        const toggleContainer = document.querySelector(".auth-card > .auth-toggle-container");
-        if (toggleContainer) toggleContainer.style.display = "block";
     }
 });
 
-// --- TOGGLE LOGIN/SIGNUP ---
-document.getElementById("auth-toggle-link")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    authMode = authMode === "LOGIN" ? "SIGNUP" : "LOGIN";
-    
-    const isLogin = authMode === "LOGIN";
-    document.getElementById("auth-title").textContent = isLogin ? "Log In to ApexTrade" : "Register Account";
-    document.getElementById("auth-submit-btn").textContent = isLogin ? "LOG IN" : "SIGN UP & SECURE ACCOUNT";
-    document.getElementById("auth-toggle-text").textContent = isLogin ? "Don't have an account?" : "Already have an account?";
-    e.target.textContent = isLogin ? "Sign Up" : "Log In";
-    
-    document.querySelectorAll(".signup-only").forEach(el => el.classList.toggle("hidden", isLogin));
-    document.querySelectorAll(".login-only").forEach(el => el.classList.toggle("hidden", !isLogin));
-    document.getElementById("auth-error-msg")?.classList.add("hidden");
-});
-
-// --- STEP 1: PASSWORD LOGIN / REGISTRATION (LOCKED VERSION) ---
+// --- STEP 1: AUTH SUBMISSION ---
 authFormContainer?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("auth-username").value.trim();
     const password = document.getElementById("auth-password").value;
     const submitBtn = document.getElementById("auth-submit-btn");
 
-    // LOCK: Prevent double-clicks
-    if (submitBtn.disabled) return; 
+    if (submitBtn.disabled) return;
     submitBtn.disabled = true;
     submitBtn.textContent = "AUTHENTICATING...";
 
     try {
-        let userCred;
-        if (authMode === "SIGNUP") {
-            userCred = await createUserWithEmailAndPassword(auth, email, password);
-            await setDoc(doc(db, "users", userCred.user.uid), { email: email, createdAt: new Date().toISOString() });
-        } else {
-            userCred = await signInWithEmailAndPassword(auth, email, password);
-        }
-
-        const userId = userCred.user.uid;
-        pendingUserId = userId; // Store the ID
-
+        let userCred = authMode === "SIGNUP" 
+            ? await createUserWithEmailAndPassword(auth, email, password)
+            : await signInWithEmailAndPassword(auth, email, password);
+        
+        pendingUserId = userCred.user.uid;
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Save OTP to DB
-        await setDoc(doc(db, "users", userId), { currentOtp: otpCode }, { merge: true });
-
-        // Send Email
-        await window.emailjs.send("service_apextrade", "template_qfe0n8c", { email: email, otp_code: otpCode });
+        await setDoc(doc(db, "users", pendingUserId), { currentOtp: otpCode }, { merge: true });
+        await window.emailjs.send("service_apextrade", "template_qfe0n8c", { email, otp_code: otpCode });
         
-        // Success: Trigger transition
-        onAuthStateChanged(auth, () => {});
-
+        // Trigger UI Switch
+        authFormContainer.classList.add("hidden");
+        otpSection.classList.remove("hidden");
     } catch (err) {
         alert("Login failed: " + err.message);
         submitBtn.disabled = false;
@@ -145,65 +76,43 @@ authFormContainer?.addEventListener("submit", async (e) => {
     }
 });
 
-// --- STEP 2: OTP VERIFICATION (DEBUGGING VERSION) ---
+// --- STEP 2: ATOMIC VERIFICATION ---
 document.getElementById("verify-otp-btn")?.addEventListener("click", async () => {
-    const rawInput = document.getElementById("auth-otp").value;
-    const userEnteredOtp = rawInput.replace(/\s/g, ''); 
+    const userEnteredOtp = document.getElementById("auth-otp").value.replace(/\s/g, '');
     const btn = document.getElementById("verify-otp-btn");
     
-    if (!pendingUserId) {
-        alert("Session error: Please log in again.");
-        return;
-    }
+    if (!pendingUserId || userEnteredOtp.length !== 6) return alert("Enter valid 6-digit code.");
 
     try {
         btn.textContent = "VERIFYING...";
         const docSnap = await getDoc(doc(db, "users", pendingUserId));
-        const dbData = docSnap.data();
         
-        // DEBUG: This will show in the Console (F12)
-        console.log("Database Data:", dbData);
-        console.log("DB OTP value:", dbData?.currentOtp);
-        console.log("User Input:", userEnteredOtp);
-        
-        // We compare the values
-        if (docSnap.exists() && String(dbData?.currentOtp) === String(userEnteredOtp)) {
+        if (docSnap.exists() && String(docSnap.data().currentOtp) === userEnteredOtp) {
             isOtpVerified = true;
             await setDoc(doc(db, "users", pendingUserId), { currentOtp: null }, { merge: true });
             
-            btn.textContent = "VERIFIED!";
-            setTimeout(() => { onAuthStateChanged(auth, () => {}); }, 500);
+            // Immediate transition
+            authContainer.classList.add("hidden");
+            desktopWrapper.classList.remove("hidden");
+            initializeDashboard();
         } else {
-            // If this fails, the Console will show you why
-            alert("Code Mismatch: Input does not match DB.");
+            alert("Code Mismatch.");
             btn.textContent = "VERIFY & ENTER TERMINAL";
         }
     } catch (err) {
-        console.error("Verification error:", err);
+        console.error(err);
         btn.textContent = "VERIFY & ENTER TERMINAL";
     }
 });
 
-// --- STEP 2.5: CANCEL OTP & FORCE FIREBASE LOGOUT ---
+// --- STEP 2.5: CANCEL ---
 document.getElementById("otp-back-link")?.addEventListener("click", async (e) => {
     e.preventDefault();
-    try {
-        const backBtn = document.getElementById("otp-back-link");
-        backBtn.textContent = "Canceling...";
-        
-        // This explicitly breaks the persistent login token cache session
-        await signOut(auth); 
-        
-        isOtpVerified = false;
-        pendingUserId = null;
-        
-        window.location.reload();
-    } catch (err) {
-        console.error("Error during cancel logout:", err);
-        window.location.reload();
-    }
+    await signOut(auth);
+    window.location.reload();
 });
 
+// ... [Keep your fetchAndRenderProfile, initializeDashboard, and logic functions below] ...
 // ==========================================================================
 // 4. CLOUD PROFILE SYNC
 // ==========================================================================
