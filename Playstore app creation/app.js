@@ -176,44 +176,42 @@ authFormContainer?.addEventListener("submit", async (e) => {
     }
 });
 
-// --- STEP 2: OTP VERIFICATION (REFINED) ---
+// --- STEP 2: OTP VERIFICATION (DEBUGGING VERSION) ---
 document.getElementById("verify-otp-btn")?.addEventListener("click", async () => {
-    // .replace(/\s/g, '') removes ALL spaces, even if they are accidental
     const rawInput = document.getElementById("auth-otp").value;
     const userEnteredOtp = rawInput.replace(/\s/g, ''); 
     const btn = document.getElementById("verify-otp-btn");
     
-    // Check if the input is actually 6 characters long AFTER cleaning
-    if (!pendingUserId || userEnteredOtp.length !== 6) {
-        alert("Verification Error: Code must be exactly 6 digits.");
+    if (!pendingUserId) {
+        alert("Session error: Please log in again.");
         return;
     }
 
     try {
         btn.textContent = "VERIFYING...";
         const docSnap = await getDoc(doc(db, "users", pendingUserId));
+        const dbData = docSnap.data();
         
-        // Ensure we handle both Numbers and Strings by using String()
-        const dbOtp = String(docSnap.data()?.currentOtp || "");
+        // DEBUG: This will show in the Console (F12)
+        console.log("Database Data:", dbData);
+        console.log("DB OTP value:", dbData?.currentOtp);
+        console.log("User Input:", userEnteredOtp);
         
-        if (docSnap.exists() && dbOtp === userEnteredOtp) {
+        // We compare the values
+        if (docSnap.exists() && String(dbData?.currentOtp) === String(userEnteredOtp)) {
             isOtpVerified = true;
             await setDoc(doc(db, "users", pendingUserId), { currentOtp: null }, { merge: true });
             
             btn.textContent = "VERIFIED!";
-            btn.style.background = "#fff";
-            
-            setTimeout(() => {
-                onAuthStateChanged(auth, () => {}); 
-            }, 500);
+            setTimeout(() => { onAuthStateChanged(auth, () => {}); }, 500);
         } else {
-            alert("Code Mismatch: The code entered does not match our records.");
+            // If this fails, the Console will show you why
+            alert("Code Mismatch: Input does not match DB.");
             btn.textContent = "VERIFY & ENTER TERMINAL";
         }
     } catch (err) {
         console.error("Verification error:", err);
         btn.textContent = "VERIFY & ENTER TERMINAL";
-        alert("System error. Please try again.");
     }
 });
 
