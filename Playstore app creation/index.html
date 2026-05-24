@@ -9,17 +9,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>emailjs.init("C-D1EFjOx7iG0bKbs");</script>
 </head>
 <body>
 
+    <!-- ============================================================
+         AUTH OVERLAY (Login / Signup / OTP)
+         ============================================================ -->
     <div id="auth-container" class="auth-overlay">
         <div class="auth-card">
-            <div class="auth-logo">
-                <span>A</span>
-            </div>
+            <div class="auth-logo"><span>A</span></div>
             <h2 id="auth-title">Log In to ApexTrade</h2>
-            <p class="auth-subtitle" id="auth-subtitle">Enter your credentials to access your trading dashboard</p>
+            <p class="auth-subtitle">Enter your credentials to access your trading dashboard</p>
 
+            <!-- Login / Signup Form -->
             <form id="auth-form" autocomplete="off">
                 <div class="auth-input-group">
                     <label for="auth-username">Email Address</label>
@@ -33,7 +36,7 @@
 
                 <div class="auth-input-group signup-only hidden">
                     <label for="auth-fullname">Full Name</label>
-                    <input type="text" id="auth-fullname" placeholder="e.g. Hari Krishnan I V">
+                    <input type="text" id="auth-fullname" placeholder="e.g. John Doe">
                 </div>
 
                 <div class="auth-input-group signup-only hidden">
@@ -41,44 +44,46 @@
                     <input type="date" id="auth-dob">
                 </div>
 
-                <div class="auth-error-msg hidden" id="auth-error-msg">
-                    Invalid credentials. Please try again.
-                </div>
+                <div class="auth-error-msg hidden" id="auth-error-msg">Invalid credentials.</div>
 
-                <div style="display:flex; align-items:center; width:100%; margin-top:15px; margin-bottom:15px;">
+                <div style="display:flex; align-items:center; width:100%; margin-top:15px;">
                     <button type="submit" class="auth-submit-btn" id="auth-submit-btn" style="flex:1;">LOG IN</button>
                 </div>
 
                 <div class="auth-toggle-container">
-                    <span id="auth-toggle-text">Don't have an account?</span>
+                    <span>Don't have an account?</span>
                     <a href="#" id="auth-toggle-link">Sign Up</a>
                 </div>
             </form>
 
-            <div id="otp-section" class="hidden" style="text-align: center; margin-top: 10px;">
-                <h3 style="color: var(--text-primary); margin-bottom: 5px; font-family: var(--font-display);">Two-Step Verification</h3>
-                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Enter the secure 6-digit code generated for your session.</p>
-                
+            <!-- OTP Section -->
+            <div id="otp-section" class="hidden">
+                <h3 style="color:var(--text-primary); margin-bottom:8px; font-family:var(--font-display); text-align:center;">Two-Step Verification</h3>
+                <p style="color:var(--text-secondary); font-size:12px; margin-bottom:20px; text-align:center;">Enter the 6-digit code sent to your email.</p>
+
                 <div class="auth-input-group">
-                    <input type="text" id="auth-otp" placeholder="••••••" style="text-align: center; letter-spacing: 8px; font-size: 22px; font-weight: bold;" maxlength="6" autocomplete="off">
+                    <input type="text" id="auth-otp" placeholder="Enter 6-digit code" maxlength="6" autocomplete="off" style="text-align:center; letter-spacing:8px; font-size:20px; font-weight:bold;">
                 </div>
-                
-                <button id="verify-otp-btn" class="auth-submit-btn" style="background: linear-gradient(135deg, #00C853 0%, #009624 100%); color: #fff; margin-top: 10px; border:none; box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);">
+
+                <button type="button" id="verify-otp-btn" class="auth-submit-btn" style="background: linear-gradient(135deg, #00C805 0%, #009624 100%); color:#fff; margin-top:10px; border:none; box-shadow: 0 4px 15px rgba(0,200,83,0.3);">
                     VERIFY & ENTER TERMINAL
                 </button>
-                
-                <div class="auth-toggle-container" style="margin-top:20px; text-align:center; font-size:13px;">
-                    <a href="#" id="otp-back-link" style="color: var(--text-secondary);">← Cancel Login</a>
+
+                <div class="auth-toggle-container" style="margin-top:20px; text-align:center; font-size:12px;">
+                    <a href="#" id="otp-back-link" style="color:var(--text-secondary);">← Back to Login</a>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ============================================================
+         MAIN DASHBOARD
+         ============================================================ -->
     <div class="desktop-wrapper hidden">
         <div class="bg-gradient-glow"></div>
 
         <div class="mobile-frame">
-
+            <!-- Header -->
             <header class="app-header">
                 <div class="header-top">
                     <div class="brand">
@@ -105,6 +110,7 @@
                     </div>
                 </div>
 
+                <!-- Portfolio Balance -->
                 <div class="portfolio-balance-card" id="balance-card">
                     <div class="balance-label">TOTAL PORTFOLIO VALUE</div>
                     <div class="balance-value-container">
@@ -117,13 +123,14 @@
                     </div>
                 </div>
 
+                <!-- Search -->
                 <div class="search-container">
                     <div class="search-wrapper">
                         <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
-                        <input type="text" id="search-input" placeholder="Search stocks, commodities (e.g., RELIANCE)..." autocomplete="off">
+                        <input type="text" id="search-input" placeholder="Search stocks..." autocomplete="off">
                         <button id="search-clear-btn" class="search-clear-btn hidden" aria-label="Clear search">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -136,12 +143,13 @@
                     </div>
                 </div>
 
+                <!-- Tabs -->
                 <div class="tabs-container">
                     <button class="tab-btn active" data-tab="watchlist-tab">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                         </svg>
-                        Market/Watchlist
+                        Market
                     </button>
                     <button class="tab-btn" data-tab="portfolio-tab">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
@@ -150,7 +158,7 @@
                             <line x1="8" y1="2" x2="8" y2="6"></line>
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
-                        Portfolio Logs
+                        Portfolio
                     </button>
                     <button class="tab-btn" data-tab="profile-panel">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
@@ -162,19 +170,19 @@
                 </div>
             </header>
 
+            <!-- Body -->
             <main class="app-body">
                 <div id="dashboard-main-view" class="dashboard-grid">
-
+                    <!-- Watchlist -->
                     <section class="tab-panel active" id="watchlist-tab">
                         <div class="section-header">
                             <div class="section-title">My Watchlist</div>
-                            <div class="section-actions">
-                                <span class="active-count" id="watchlist-count">0 items</span>
-                            </div>
+                            <span class="active-count" id="watchlist-count">0 items</span>
                         </div>
                         <div class="watchlist-list" id="watchlist-list"></div>
                     </section>
 
+                    <!-- Portfolio -->
                     <section class="tab-panel" id="portfolio-tab">
                         <div class="portfolio-stats-grid">
                             <div class="stat-card">
@@ -199,149 +207,69 @@
                     </section>
                 </div>
 
+                <!-- Profile Panel -->
                 <section class="profile-panel-overlay hidden" id="profile-panel">
                     <div class="profile-container-wrapper">
-
                         <div class="profile-hub-header" style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
-                            <div style="text-align:left;">
-                                <h2 class="profile-hub-title">REGULATED BROKER PROFILE</h2>
-                                <p class="profile-hub-subtitle">Client Information & Exchange Demat Account Parameters</p>
+                            <div>
+                                <h2 class="profile-hub-title">CLIENT PROFILE</h2>
+                                <p class="profile-hub-subtitle">Account Information & Settings</p>
                             </div>
-                            <div style="display:flex; align-items:center; gap:15px;">
-                                <button type="button" id="back-to-dashboard-btn" class="btn-secondary">← Back to Terminal</button>
-                                <button type="button" id="profile-edit-btn" class="btn-execute-order btn-buy" style="height:36px; padding:0 16px; font-size:12.5px; font-weight:700; border-radius:var(--border-radius-sm); box-shadow:0 2px 8px var(--green-glow);">
-                                    Edit Profile
-                                </button>
-                            </div>
+                            <button type="button" id="back-to-dashboard-btn" class="btn-secondary">← Back to Terminal</button>
                         </div>
 
                         <div class="profile-grid">
-
                             <div class="profile-card-new">
                                 <div class="profile-card-header">
-                                    <span class="card-num">Personal KYC Details</span>
+                                    <span class="card-num">Personal Details</span>
                                 </div>
                                 <div class="profile-card-body">
-                                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:12px; margin-bottom:16px;">
-                                        <div class="profile-avatar-new" id="profile-avatar-img-container" style="position:relative;">
-                                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
-                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                                <circle cx="12" cy="7" r="4"></circle>
-                                            </svg>
-                                            <div class="profile-status-ring" style="position:absolute; bottom:0; right:0;"></div>
-                                        </div>
-                                        <input type="file" id="avatar-upload" accept="image/*" style="font-size:11px; color:#8A92A6; cursor:pointer; background:#1F242F; padding:6px; border:1px solid #242D3D; border-radius:4px; width:100%; max-width:250px;">
-                                        <button type="button" id="cloud-sync-btn" style="background:linear-gradient(135deg,#3897FC 0%,#1d4ed8 100%); color:#fff; border:none; padding:10px 12px; border-radius:6px; font-weight:bold; cursor:pointer; width:100%; max-width:250px; box-shadow:0 4px 10px rgba(56,151,252,0.3);">
-                                            ☁️ Save to Google Drive
-                                        </button>
-                                    </div>
-
-                                    <h3 class="profile-client-name read-field" id="profile-client-name">—</h3>
-
+                                    <h3 class="profile-client-name" id="profile-client-name">—</h3>
                                     <div class="info-row">
-                                        <span class="info-label">Date of Birth</span>
-                                        <span class="info-value read-field" id="profile-dob-display">—</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Gender</span>
-                                        <span class="info-value" id="profile-gender-display">—</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Registered Email</span>
+                                        <span class="info-label">Email</span>
                                         <span class="info-value read-field" id="profile-email-display">—</span>
                                     </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Verification Status</span>
-                                        <span class="verification-badge" id="profile-verification-status">UNVERIFIED</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="profile-card-new">
-                                <div class="profile-card-header">
-                                    <span class="card-num">Trading Profile & Metrics</span>
-                                </div>
-                                <div class="profile-card-body">
-                                    <div class="info-row-stack">
-                                        <span class="info-label">Trading Experience</span>
-                                        <span class="info-value read-field" id="profile-experience-display">—</span>
-                                    </div>
-                                    <div class="info-row-stack">
-                                        <span class="info-label">Trader Type</span>
-                                        <span class="info-value">Active Intraday &amp; Derivatives Trader</span>
-                                    </div>
-                                    <div class="info-row-stack">
-                                        <span class="info-label">Core Strategy</span>
-                                        <span class="info-value">VWAP, RSI, &amp; EMA Index Structure (Nifty / Bank Nifty)</span>
-                                    </div>
-                                    <div class="info-row-stack">
-                                        <span class="info-label">Segment Privileges</span>
-                                        <span class="info-value read-field" id="profile-segments-display">—</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="profile-card-new">
-                                <div class="profile-card-header">
-                                    <span class="card-num">Account &amp; Nominee Configurations</span>
-                                </div>
-                                <div class="profile-card-body">
                                     <div class="info-row">
                                         <span class="info-label">Client ID</span>
                                         <span class="info-value text-highlight" id="profile-client-id">—</span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label">Margin Setup</span>
-                                        <span class="info-value">Pledged Holdings (50:50 Cash-to-Collateral Rule)</span>
-                                    </div>
-                                    <div class="info-row-stack">
-                                        <span class="info-label">Nominee Status</span>
-                                        <span class="info-value" style="color:var(--green-vivid); font-weight:700;">✓ Nominee Registered &amp; Opted In (100% Share Assigned)</span>
+                                        <span class="info-label">Status</span>
+                                        <span class="verification-badge verified" id="profile-verification-status">✓ VERIFIED</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="profile-card-new">
                                 <div class="profile-card-header">
-                                    <span class="card-num">Customer Support Gateway</span>
+                                    <span class="card-num">Support</span>
                                 </div>
                                 <div class="profile-card-body">
                                     <div class="info-row">
-                                        <span class="info-label">Assigned Support Rep</span>
-                                        <span class="info-value">Hari Krishnan I V (NISM-VIII Certified)</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Helpdesk Hotline</span>
-                                        <span class="info-value">+91 7012419693</span>
-                                    </div>
-                                    <div class="info-row">
                                         <span class="info-label">Support Email</span>
-                                        <span class="info-value">businesssolution199@gmail.com</span>
+                                        <span class="info-value">support@apextrade.com</span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label">Home Branch</span>
-                                        <span class="info-value">Trivandrum, Kerala</span>
+                                        <span class="info-label">Help Center</span>
+                                        <span class="info-value">24/7 Available</span>
                                     </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Current Support Status</span>
-                                        <span class="info-value">Live Token Gateway Active</span>
-                                    </div>
-                                    <button type="button" class="btn-execute-order btn-buy" id="support-ticket-btn" style="margin-top:16px; width:100%;">
-                                        Contact Helpdesk / Create Ticket
+                                    <button type="button" id="support-ticket-btn" class="btn-execute-order btn-buy" style="margin-top:16px; width:100%;">
+                                        Create Support Ticket
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="profile-action-bar-wrapper" style="display:flex; justify-content:center; width:100%; margin-top:16px; padding-bottom:16px;">
-                            <button type="button" id="profile-back-btn" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary); padding:12px 32px; border-radius:30px; font-weight:600; font-family:var(--font-sans); font-size:14px; cursor:pointer; transition:all 0.2s ease; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
-                                ← Return to Live Trading Terminal
+                        <div style="display:flex; justify-content:center; width:100%; margin-top:16px;">
+                            <button type="button" id="profile-back-btn" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary); padding:12px 32px; border-radius:30px; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s ease;">
+                                ← Return to Terminal
                             </button>
                         </div>
                     </div>
                 </section>
             </main>
 
+            <!-- Transaction Modal -->
             <div class="modal-overlay hidden" id="transaction-modal">
                 <div class="modal-sheet">
                     <div class="modal-header">
@@ -354,9 +282,7 @@
                     <div class="modal-body">
                         <div class="modal-price-row">
                             <span class="modal-price-label">Live Price</span>
-                            <div class="modal-price-val">
-                                <span>₹</span><span id="modal-live-price">0.00</span>
-                            </div>
+                            <div class="modal-price-val">₹<span id="modal-live-price">0.00</span></div>
                         </div>
 
                         <div class="action-toggle">
@@ -367,9 +293,9 @@
                         <div class="input-group">
                             <label for="transaction-qty">Quantity</label>
                             <div class="qty-control">
-                                <button type="button" class="qty-btn" id="qty-minus" aria-label="Decrease quantity">−</button>
+                                <button type="button" class="qty-btn" id="qty-minus">−</button>
                                 <input type="number" id="transaction-qty" min="1" value="10">
-                                <button type="button" class="qty-btn" id="qty-plus" aria-label="Increase quantity">+</button>
+                                <button type="button" class="qty-btn" id="qty-plus">+</button>
                             </div>
                         </div>
 
@@ -388,8 +314,10 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-        </div></div>
-    <script type="module" src="app.js?version=101"></script>
+    <!-- Scripts -->
+    <script type="module" src="app-firebase.js"></script>
 </body>
 </html>
