@@ -79,30 +79,30 @@ if (!localStorage.getItem('user_credentials')) {
 // DOM REFERENCES
 // ==========================================================================
 
-const searchInput           = document.getElementById("search-input");
-const searchClearBtn        = document.getElementById("search-clear-btn");
-const searchDropdown        = document.getElementById("search-dropdown");
-const searchDropdownList    = document.getElementById("search-dropdown-list");
-const watchlistList         = document.getElementById("watchlist-list");
-const holdingsList          = document.getElementById("holdings-list");
-const activityLogList       = document.getElementById("activity-log-list");
-const portfolioBalanceEl    = document.getElementById("portfolio-balance");
-const portfolioChangeBadge  = document.getElementById("portfolio-change-badge");
-const portfolioInvestedEl   = document.getElementById("portfolio-invested");
-const portfolioPnlEl        = document.getElementById("portfolio-pnl");
-const watchlistCountEl      = document.getElementById("watchlist-count");
+const searchInput          = document.getElementById("search-input");
+const searchClearBtn       = document.getElementById("search-clear-btn");
+const searchDropdown       = document.getElementById("search-dropdown");
+const searchDropdownList   = document.getElementById("search-dropdown-list");
+const watchlistList        = document.getElementById("watchlist-list");
+const holdingsList         = document.getElementById("holdings-list");
+const activityLogList      = document.getElementById("activity-log-list");
+const portfolioBalanceEl   = document.getElementById("portfolio-balance");
+const portfolioChangeBadge = document.getElementById("portfolio-change-badge");
+const portfolioInvestedEl  = document.getElementById("portfolio-invested");
+const portfolioPnlEl       = document.getElementById("portfolio-pnl");
+const watchlistCountEl     = document.getElementById("watchlist-count");
 
-const transactionModal      = document.getElementById("transaction-modal");
-const modalTicker           = document.getElementById("modal-ticker");
-const modalName             = document.getElementById("modal-name");
-const modalLivePrice        = document.getElementById("modal-live-price");
-const modalCloseBtn         = document.getElementById("modal-close-btn");
-const toggleBuyBtn          = document.getElementById("toggle-buy-btn");
-const toggleSellBtn         = document.getElementById("toggle-sell-btn");
-const transactionQtyInput   = document.getElementById("transaction-qty");
-const modalOrderValue       = document.getElementById("modal-order-value");
-const modalTradingFee       = document.getElementById("modal-trading-fee");
-const executeOrderBtn       = document.getElementById("execute-order-btn");
+const transactionModal     = document.getElementById("transaction-modal");
+const modalTicker          = document.getElementById("modal-ticker");
+const modalName            = document.getElementById("modal-name");
+const modalLivePrice       = document.getElementById("modal-live-price");
+const modalCloseBtn        = document.getElementById("modal-close-btn");
+const toggleBuyBtn         = document.getElementById("toggle-buy-btn");
+const toggleSellBtn        = document.getElementById("toggle-sell-btn");
+const transactionQtyInput  = document.getElementById("transaction-qty");
+const modalOrderValue      = document.getElementById("modal-order-value");
+const modalTradingFee      = document.getElementById("modal-trading-fee");
+const executeOrderBtn      = document.getElementById("execute-order-btn");
 
 const authContainer         = document.getElementById("auth-container");
 const desktopWrapper        = document.querySelector(".desktop-wrapper");
@@ -671,14 +671,17 @@ async function handleCloudAvatarUpload(file) {
             const result = await response.json();
 
             if (result.status === 'success') {
-                localStorage.setItem("user_avatar", reader.result);
-                const avatarContainer = document.getElementById("profile-avatar-img-container");
-                if (avatarContainer) {
-                    avatarContainer.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
-                }
-                alert("Profile photo securely saved to the admin database!");
-            } else {
-                alert("Upload failed: " + (result.message || "Unknown error"));
+             
+if (result.status === 'success') {
+            localStorage.setItem("user_avatar", reader.result);
+            const avatarContainer = document.getElementById("profile-avatar-img-container");
+            if (avatarContainer) {
+                avatarContainer.innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" id="profile-avatar-img">`;
+            }
+            alert("Photo updated!"); // Success path
+        } else {
+            alert("Photo upload failed."); // Failure path
+        }
             }
         } catch (error) {
             console.error("Bridge Transmission Error:", error);
